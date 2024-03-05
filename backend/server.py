@@ -7,10 +7,10 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 #index route
 @app.route("/message")
-@cross_origin()
+@cross_origin(origins="*")
 def index():
     return {"message": "hello"}
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5050)

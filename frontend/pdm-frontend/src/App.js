@@ -6,7 +6,7 @@ function App() {
   const [data, setData] = useState([{}]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/message", {
+    fetch("http://localhost:5050/message", {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
