@@ -5,6 +5,11 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 #index route
 @app.route("/message")
 @cross_origin(origins="*")
@@ -12,8 +17,8 @@ def index():
     import psycopg2
     from sshtunnel import SSHTunnelForwarder
 
-    username = ""
-    password = ""
+    username = os.environ.get('user')
+    password = os.environ.get('password')
     dbName = "p320_10"
 
     try:
