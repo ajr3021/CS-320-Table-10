@@ -3,7 +3,7 @@ import './App.css';
 import React, {useState, useEffect} from 'react';
 
 function App() {
-  const [data, setData] = useState([{}]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
     fetch("http://localhost:5050/message", {
@@ -20,9 +20,30 @@ function App() {
     })
   }, [])
 
+  const deleteElement = (id) => {
+    const copy = [...data]
+    const result = copy.filter(collection => collection[0] !== id);
+    setData(result);
+
+    fetch(`http://localhost:5050/api/collection/${id}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      method: 'DELETE',
+    })
+  }
+
   return (
     <div className="App">
-      <p>The message is {data.message}</p>
+      {data.length > 0 && data.map(collection => {
+        return(
+          <div key={collection[0]} className="collection">
+            <p>{collection[0]} {collection[1]}</p>
+            <button id="delete" onClick={() => deleteElement(collection[0])}>Delete</button>
+          </div>
+        )
+      })}
     </div>
   );
 }
