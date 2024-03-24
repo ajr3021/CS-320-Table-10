@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS, cross_origin
 
-app = Flask(__name__)   #
-cors = CORS(app)    #
-app.config['CORS_HEADERS'] = 'Content-Type' #
+app = Flask(__name__)   #Creates flask application
+cors = CORS(app)    #Enables Cross origin resource sharing (domain a can use stuff from domain b)
+app.config['CORS_HEADERS'] = 'Content-Type' #??? Not sure
 
 import os
 from dotenv import load_dotenv
@@ -48,7 +48,7 @@ def index():
 
     return result
         
-@app.route("/api/collection/<cid>")
+@app.route("/api/collection/<cid>")#By default only GET requests are handled.
 @cross_origin(origins="*")
 def get_collection_by_id(cid):
     sql = f"SELECT * FROM collection WHERE cid={cid};"  #SQL DML statement to get all collections with a give cid.
@@ -72,7 +72,7 @@ def delete_collection_by_id(cid):
     #All of this code is untested.
     #TODO: Build unit tests, database simulator for testing the queries.
 
-@app.route("/api/user/follow", method=['POST'])
+@app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
 def follow_user(followerUid, followedUid):
     sql = f"INSERT INTO followers(followerId, followedId) VALUES ({followerUid}, {followedUid});"
@@ -83,7 +83,7 @@ def follow_user(followerUid, followedUid):
     return {}, 200
 
 
-@app.route("/api/user/follow", method=['DELETE'])
+@app.route("/api/user/follow", methods=['DELETE'])
 @cross_origin(origins="*")
 def unfollow_user(followerUid, followedUid):
     sql = f"DELETE FROM followers WHERE followerId={followerUid} AND followedId={followedUid};"
@@ -96,7 +96,7 @@ def unfollow_user(followerUid, followedUid):
 
 #email: Email fragment to search by
 #uid:User ID. Ignored
-@app.route("/api/user/follow", method=['GET'])
+@app.route("/api/user/follow")#Only responds to GET
 @cross_origin(origins="*")
 def findByEmail(email, uid):
     #Get all users with an email containing some substring and is not already someone the user follows.
@@ -108,7 +108,7 @@ def findByEmail(email, uid):
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
-    conn.commit()
+    conn.commit() #Should probably be changed given problem with database transaction
     #Return tuple of list of users, status.
 
     return result, 200
