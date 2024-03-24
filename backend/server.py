@@ -93,10 +93,18 @@ def unfollow_user(followerUid, followedUid):
     #Return tuple of list of users, status number.
     return {}, 200
 
+
+#email: Email fragment to search by
+#uid:User ID. Ignored
 @app.route("/api/user/follow", method=['GET'])
 @cross_origin(origins="*")
-def findByEmail(email):
-    sql = f"SELECT name FROM users WHERE email={email};"
+def findByEmail(email, uid):
+    #Get all users with an email containing some substring and is not already someone the user follows.
+    #UI shouldn't allow user to follow themselves.
+        #Get names where...
+            #Get name from users where email fragment matches
+            #the uid of the name of the person is not already followed by the user
+    sql = f"SELECT name, uid FROM users WHERE ( email LIKE \'{email}%\' ) AND ( uid NOT IN (SELECT (followedId) FROM followers WHERE followerId = {uid}) );"
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
