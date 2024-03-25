@@ -1,51 +1,26 @@
 import './App.css';
-
-import React, {useState, useEffect} from 'react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from './Layout'
+import Home from './pages/Home';
+import Collection from './pages/Collection';
+import Users from './pages/Users';
+import VideoGame from './pages/VideoGame';
+import Search from './pages/Search';
 
 function App() {
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-    fetch("http://localhost:5050/message", {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
-    }).then(res => {
-      console.log(res);
-      return res.json()
-    }).then(data => {
-        console.log(data);
-        setData(data);
-    })
-  }, [])
-
-  const deleteElement = (id) => {
-    const copy = [...data]
-    const result = copy.filter(collection => collection[0] !== id);
-    setData(result);
-
-    fetch(`http://localhost:5050/api/collection/${id}`, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      method: 'DELETE',
-    })
-  }
-
   return (
-    <div className="App">
-      {data.length > 0 && data.map(collection => {
-        return(
-          <div key={collection[0]} className="collection">
-            <p>{collection[0]} {collection[1]}</p>
-            <button id="delete" onClick={() => deleteElement(collection[0])}>Delete</button>
-          </div>
-        )
-      })}
-    </div>
-  );
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Layout />}>
+          <Route index element={<Home />}></Route>
+          <Route path='/collection/:collectionId' element={<Collection />}></Route>
+          <Route path='/videoGame/:videoGameId' element={<VideoGame />}></Route>
+          <Route path='/users' element={<Users />}></Route>
+          <Route path='/search' element={<Search />}></Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App;
