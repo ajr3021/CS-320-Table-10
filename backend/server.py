@@ -68,15 +68,15 @@ def delete_collection_by_id(cid):
     conn.commit() #Commit database change.
 
     return {}, 200
-#CURRENT ISSUE:
-    #All of this code is untested.
-    #TODO: Build unit tests, database simulator for testing the queries.
-
+#STATE:
+    #Backend urls respond properly
+    #SQL statements should work in theory, tested them on a database simulation.
+    #Tested the one statement that I wasn't sure about working.
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
 def follow_user(followerUid, followedUid):
     sql = f"INSERT INTO followers(followerId, followedId) VALUES ({followerUid}, {followedUid});"
-
+    print("followUser Called")
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
     #Returns tuple of empty array, status number.
@@ -89,7 +89,7 @@ def unfollow_user(followerUid, followedUid):
     sql = f"DELETE FROM followers WHERE followerId={followerUid} AND followedId={followedUid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
-    
+    print("unfollowUser Called")
     #Return tuple of list of users, status number.
     return {}, 200
 
@@ -110,9 +110,9 @@ def findByEmail(email, uid):
     result = curs.fetchall()
     conn.commit() #Should probably be changed given problem with database transaction
     #Return tuple of list of users, status.
-
+    print("FindbyEmail Called")
     return result, 200
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5050)
+    app.run(debug=True, host="0.0.0.0", port=5050)#Run on port 5050.
