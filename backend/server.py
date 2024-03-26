@@ -74,8 +74,8 @@ def delete_collection_by_id(cid):
     #Tested the one statement that I wasn't sure about working.
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
-def follow_user(followerUid, followedUid):
-    sql = f"INSERT INTO followers(followerId, followedId) VALUES ({followerUid}, {followedUid});"
+def follow_user(followedUid, followerid):
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({uid}, {fid});"
     print("followUser Called")
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
@@ -86,17 +86,18 @@ def follow_user(followerUid, followedUid):
 @app.route("/api/user/follow", methods=['DELETE'])
 @cross_origin(origins="*")
 def unfollow_user(followerUid, followedUid):
-    sql = f"DELETE FROM followers WHERE followerId={followerUid} AND followedId={followedUid};"
+    sql = f"DELETE FROM friends WHERE fid={followerUid} AND uid={followedUid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
     print("unfollowUser Called")
     #Return tuple of list of users, status number.
     return {}, 200
 
-
+#Update API specification
+#Use path parameters.
 #email: Email fragment to search by
 #uid:User ID. Ignored
-@app.route("/api/user/follow")#Only responds to GET
+@app.route("/api/user/follow/<uid>")#Only responds to GET
 @cross_origin(origins="*")
 def findByEmail(email, uid):
     #Get all users with an email containing some substring and is not already someone the user follows.
@@ -104,13 +105,13 @@ def findByEmail(email, uid):
         #Get names where...
             #Get name from users where email fragment matches
             #the uid of the name of the person is not already followed by the user
-    sql = f"SELECT name, uid FROM users WHERE ( email LIKE \'{email}%\' ) AND ( uid NOT IN (SELECT (followedId) FROM followers WHERE followerId = {uid}) );"
+    sql = f"SELECT name, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND ( uid NOT IN (SELECT (fid) FROM friends WHERE fid = {uid}) );"
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
     conn.commit() #Should probably be changed given problem with database transaction
     #Return tuple of list of users, status.
-    print("FindbyEmail Called")
+    print("FindbyEmail Called")#Pass as form data
     return result, 200
 
 
