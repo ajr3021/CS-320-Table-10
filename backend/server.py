@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import request
 from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)   #Creates flask application
@@ -75,7 +76,7 @@ def delete_collection_by_id(cid):
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
 def follow_user(followedUid, followerid):
-    sql = f"INSERT INTO friends(uid, fid) VALUES ({uid}, {fid});"
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
     print("followUser Called")
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
@@ -86,6 +87,7 @@ def follow_user(followedUid, followerid):
 @app.route("/api/user/follow", methods=['DELETE'])
 @cross_origin(origins="*")
 def unfollow_user(followerUid, followedUid):
+    
     sql = f"DELETE FROM friends WHERE fid={followerUid} AND uid={followedUid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
@@ -99,21 +101,23 @@ def unfollow_user(followerUid, followedUid):
 #uid:User ID. Ignored
 @app.route("/api/user/follow/<uid>")#Only responds to GET
 @cross_origin(origins="*")
-def findByEmail(email, uid):
+def findByEmail(uid):
     #Get all users with an email containing some substring and is not already someone the user follows.
     #UI shouldn't allow user to follow themselves.
         #Get names where...
             #Get name from users where email fragment matches
             #the uid of the name of the person is not already followed by the user
+    email = str(request.args.get("email"))
     sql = f"SELECT name, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND ( uid NOT IN (SELECT (fid) FROM friends WHERE fid = {uid}) );"
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
     conn.commit() #Should probably be changed given problem with database transaction
     #Return tuple of list of users, status.
-    print("FindbyEmail Called")#Pass as form data
+    #print("FindbyEmail Called")#Pass as form data
+    #print(email)
     return result, 200
-
+    
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)#Run on port 5050.
