@@ -75,7 +75,9 @@ def delete_collection_by_id(cid):
     #Tested the one statement that I wasn't sure about working.
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
-def follow_user(followedUid, followerid):
+def follow_user():
+    followerUid = int(request.args.get("followerUid"))
+    followedUid = int(request.args.get("followedUid"))
     sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
     print("followUser Called")
     curs.execute(sql)   #Execute sql statement
@@ -86,8 +88,9 @@ def follow_user(followedUid, followerid):
 
 @app.route("/api/user/follow", methods=['DELETE'])
 @cross_origin(origins="*")
-def unfollow_user(followerUid, followedUid):
-    
+def unfollow_user():
+    followerUid = int(request.args.get("followerUid"))
+    followedUid = int(request.args.get("followedUid"))
     sql = f"DELETE FROM friends WHERE fid={followerUid} AND uid={followedUid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
@@ -108,6 +111,7 @@ def findByEmail(uid):
             #Get name from users where email fragment matches
             #the uid of the name of the person is not already followed by the user
     email = str(request.args.get("email"))
+    
     sql = f"SELECT name, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND ( uid NOT IN (SELECT (fid) FROM friends WHERE fid = {uid}) );"
 
     curs.execute(sql)   #Execute sql statement
@@ -115,9 +119,7 @@ def findByEmail(uid):
     conn.commit() #Should probably be changed given problem with database transaction
     #Return tuple of list of users, status.
     #print("FindbyEmail Called")#Pass as form data
-    #print(email)
     return result, 200
-    
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)#Run on port 5050.
