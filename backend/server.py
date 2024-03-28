@@ -57,12 +57,55 @@ def get_collection_by_id(cid):
     result = curs.fetchall() 
     conn.commit()
 
-    return result 
+    return result
+
+@app.route("/api/videogame/")
+@cross_origin(origins="*")
+def get_random_videogame():
+    sql = f"SELECT * FROM video_game ORDER BY RAND() LIMIT 1;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
 
 @app.route("/api/collection/<cid>", methods=['DELETE'])
 @cross_origin(origins="*")
 def delete_collection_by_id(cid):
     sql = f"DELETE FROM collection WHERE cid={cid};"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return {}, 200
+
+@app.route("/api/collection/<cid>")
+@cross_origin(origins="*")
+def update_collection_name(cid, name):
+    sql = f"UPDATE collection SET CName = {name} WHERE cid={cid};"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+@app.route("/api/collection/<cid>/<vid>")
+@cross_origin(origins="*")
+def insert_videogame_into_collection(cid, vid):
+    sql = f"INSERT INTO CollectionHas (CID, VID) VALUES ({cid}, {vid});"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+@app.route("/api/collection/<cid>/<vid>", methods=['DELETE'])
+@cross_origin(origins="*")
+def delete_videogame_from_collection(cid, vid):
+    sql = f"DELETE FROM CollectionHas WHERE CID = {cid} and VID = {vid};"
 
     curs.execute(sql)
     conn.commit()
