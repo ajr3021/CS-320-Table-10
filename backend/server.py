@@ -81,9 +81,16 @@ def getGame(vid):
 #Use route parameters. Why not? May change in the future.
 @app.route("/api/videogame/<vid>", methods=['POST'])
 @cross_origin(origins="*")
-def makeGame():
+def makeGame(vid):
+    vid = int(vid)
+    title = str(request.args.get("title"))#Get all external data from parameters.
+    esrb = str(request.args.get("esrb_rating"))
+    image = str(request.args.get("image"))
+    desc = str(request.args.get("description"))
+    sql = f"INSERT INTO video_game(vid, esb_rating, title, image, description) VALUES ({vid}, {esrb}, {title}, {image}, {desc});"
 
-
+    curs.execute(sql)
+    conn.commit()
 
     return 200
 
