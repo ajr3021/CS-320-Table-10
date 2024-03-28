@@ -68,7 +68,24 @@ def delete_collection_by_id(cid):
     conn.commit()
 
     return {}, 200
+@app.route("/api/videogame/<vid>", methods=['GET'])
+@cross_origin(origins="*")
+def getGame(vid):
+    sql = f"SELECT * FROM video_game WHERE vid={vid};"
 
+    curs.execute(sql)
+    result = curs.fetchall()#This should always be of size one. Otherwise database has an issue.
+    conn.commit()
+
+    return result, 200
+#Use route parameters. Why not? May change in the future.
+@app.route("/api/videogame/<vid>", methods=['POST'])
+@cross_origin(origins="*")
+def makeGame():
+
+
+
+    return 200
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
