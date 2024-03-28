@@ -1,0 +1,118 @@
+.full-banner {
+    width: 70vw;
+    height: 25vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    margin-top: -20px;
+    margin-left: -10px;
+}
+
+.full-banner img {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.header{
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 35vw;
+}
+
+.header p {
+    margin-top: 10px;
+}
+
+.padded {
+    padding: 10px;
+}
+
+.padded div {
+    margin-bottom: 10px;
+}
+
+.padded ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+}
+
+.game-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: baseline;
+}
+
+.info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.game-form h1, .time-form h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.game-form form p {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+.time-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+.time-form .not-button {
+    display: flex;
+    flex-direction: row;
+}
+
+.time-form form div {
+    display: flex;
+    flex-direction: column;
+}
+
+.time-form form button{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px;
+}
+
+#collections-form {
+    margin-left: 10px;
+}
+
+#collections-form form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#collections-form form button {
+    width: 100%;
+    padding: 10px;
+}
+
+.time-form label {
+    font-size: 1.5rem;
+    margin: 5px 0px;
+}
+
+.collection-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-top: 50px;
+}
+
+.forms {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 30px;
+}
