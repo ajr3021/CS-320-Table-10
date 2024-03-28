@@ -94,5 +94,40 @@ def makeGame(vid):
 
     return 200
 
+@app.route("/api/videogame/<uid>/<vid>", methods=['POST'])
+@cross_origin(origins="*")
+def addPlaytime(uid, vid):
+    pass
+
+#WIP function. Comment out if needed.
+#seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
+#sortBy:Ascending or descending
+#data:The data to look at
+#Row:video game’s name, platforms, the developers, the publisher, the playtime (of user) and the esrb and aggregate user ratings.
+@app.route("/api/videogame/<uid>/<searchBy>/<sortBy>/<data>", methods=['GET'])
+@cross_origin(origins="*")
+def searchAndSortGames(uid, searchBy, sortBy, data):
+    #assume the data is correct.
+
+    #Prevent unwanted sql statements.
+    if sortBy != "DESC" and sortBy != "ASC":
+        return {}, 400
+    #For this statement I'm gonna need to join multiple tables together to get all the data I need.
+    #Sort alphabetically and release date-wise ascending
+    #Tables used:
+        #video_game (name, esrb rating)
+        #game_platform (needed to get price, release_date)
+        #Gameplay (for that of user)
+        #publishing (for publishers)
+        #development (needed to get all developers of a game)
+        #rates (needed to get average of all user ratings)
+    #Development and publishing are BOTH going to be arrays. I could get them in a separate sql query and return a new list of resulting tuples(?)
+    sql = f"SELECT title FROM video_game WHERE {searchBy}={data} ORDER BY title ASC, ;"
+
+    curs.execute(sql)
+    conn.commit()
+    return result, 200
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
