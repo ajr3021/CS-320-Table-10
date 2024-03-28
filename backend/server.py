@@ -12,6 +12,10 @@ load_dotenv()
 
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
+#Finished all of the first draft code.
+    #Need to test all methods.
+        #Test if the routes and param structure works correctly
+        #Test the individual sql statements.
 
 username = os.environ.get('user')
 password = os.environ.get('password')
@@ -68,6 +72,7 @@ def delete_collection_by_id(cid):
     conn.commit()
 
     return {}, 200
+
 @app.route("/api/videogame/<vid>", methods=['GET'])
 @cross_origin(origins="*")
 def getGame(vid):
@@ -93,11 +98,17 @@ def makeGame(vid):
     conn.commit()
 
     return 200
-
+#'2021-05-20 12:07:18'
 @app.route("/api/videogame/<uid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def addPlaytime(uid, vid):
-    pass
+    startTime = str(request.args.get("starttime"))
+    endTime = str(request.args.get("endtime"))
+
+    sql = f"INSERT INTO gameplay(uid, vid, starttime, endtime) VALUES ({uid}, {vid}, {startTime}, {endTime});"
+    curs.execute(sql)#We can change this from format string to data later.
+    conn.commit()
+    return 200
 
 #WIP function. Comment out if needed.
 #seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
@@ -112,7 +123,6 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
     #Prevent unwanted sql statements.
     if sortBy != "DESC" and sortBy != "ASC":
         return {}, 400
-    #For this statement I'm gonna need to join multiple tables together to get all the data I need.
     #Sort alphabetically and release date-wise ascending
     #Tables used:
         #video_game (name, esrb rating)
@@ -122,11 +132,77 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
         #development (needed to get all developers of a game)
         #rates (needed to get average of all user ratings)
     #Development and publishing are BOTH going to be arrays. I could get them in a separate sql query and return a new list of resulting tuples(?)
-    sql = f"SELECT title FROM video_game WHERE {searchBy}={data} ORDER BY title ASC, ;"
-
+    
+    sql = f"SELECT vid FROM video_game INNER JOIN game_platform ON game_platform.vid = video_game.vid WHERE {searchBy}={data} ORDER BY video_game.title ASC, game_platform.release_date ASC;"
+    games_results = []
     curs.execute(sql)
     conn.commit()
-    return result, 200
+    user_rating_alias = "averageRate"
+    game_list = curs.fetchall()#This should fetch tuples of title and vid
+    for gameId in game_list:
+
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_name_sql)
+        conn.commit()
+        game_name = curs.fetchone()
+
+        user_avg_rating_sql = f"SELECT AVG(rating) as {user_rating_alias} FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
+        curs.execute(user_avg_rating_sql)
+        conn.commit()
+        user_avg_rating = curs.fetchone()
+
+        
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        curs.execute(developer_list_sql)
+        conn.commit()
+        developer_list = curs.fetchall()
+
+
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        curs.execute(publisher_list_sql)
+        conn.commit()
+        publisher_list = curs.fetchall()
+
+
+        #Get esrb rating
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_esrb_rating_sql)
+        conn.commit()
+        game_esrb_rating = curs.fetchall()
+
+
+        #Get playtime
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]};" 
+        curs.execute(user_playtime_sql)
+        conn.commit()
+        user_playtime = curs.fetchall()
+
+
+        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
+        curs.execute(platform_list_sql)
+        conn.commit()
+        platform_list = curs.fetchall()
+
+
+        game_dict = {
+            "title": game_name[0],
+            "platforms": platform_list,
+            "developers": developer_list,
+            "publishers": publisher_list,
+            "playTime": user_playtime,
+            "esrb_rating": game_esrb_rating,
+            "userRating": user_average_rating[0]
+        }
+
+        games_results.append(game_dict)
+
+        #Add everything to a dictionary
+            #Deep copy everything.
+        #Push dictionary into games_results.
+
+    #List of dictionaries of:
+        #(name, [platforms], [developers], publisher, user's playtime, esrb rating, user average rating.)
+    return games_results, 200
 
 
 if __name__ == "__main__":
