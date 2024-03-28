@@ -76,7 +76,7 @@ def delete_collection_by_id(cid):
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
 def follow_user():
-    followerUid = int(request.args.get("followerUid"))
+    followerUid = int(request.args.get("followerUid"))#Get all external data from parameters.
     followedUid = int(request.args.get("followedUid"))
     sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
     print("followUser Called")
