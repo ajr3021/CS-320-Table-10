@@ -73,7 +73,7 @@ def signup():
 @app.route("/api/login", methods=["POST"])
 @cross_origin(origins="*")
 def login():
-
+    global LOGGED_IN_USER_ID
     data = request.get_json(force=True)
 
     username = data['username']
@@ -323,12 +323,12 @@ def delete_collection_by_id(cid):
     #Backend urls respond properly
     #SQL statements should work in theory, tested them on a database simulation.
     #Tested the one statement that I wasn't sure about working.
-@app.route("/api/user/follow", methods=['POST'])
+
+@app.route("/api/user/follow/<uid>", methods=['POST'])
 @cross_origin(origins="*")
-def follow_user():
-    followerUid = int(request.args.get("followerUid"))#Get all external data from parameters.
-    followedUid = int(request.args.get("followedUid"))
-    sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
+def follow_user(uid):
+    print("Logged id:" + str(LOGGED_IN_USER_ID) + " Friend id: " + str(uid))
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
     print("followUser Called")
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
@@ -336,12 +336,10 @@ def follow_user():
     return {}, 200
 
 
-@app.route("/api/user/follow", methods=['DELETE'])
+@app.route("/api/user/follow/<uid>", methods=['DELETE'])
 @cross_origin(origins="*")
-def unfollow_user():
-    followerUid = int(request.args.get("followerUid"))
-    followedUid = int(request.args.get("followedUid"))
-    sql = f"DELETE FROM friends WHERE fid={followerUid} AND uid={followedUid};"
+def unfollow_user(uid):
+    sql = f"DELETE FROM friends WHERE fid={LOGGED_IN_USER_ID} AND uid={uid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
     print("unfollowUser Called")
