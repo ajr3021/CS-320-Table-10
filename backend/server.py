@@ -76,7 +76,10 @@ def get_collection_by_id(cid):
         gamedict["name"] = game[1]
         gamedict["esrb_rating"] = game[2]
         gamedict["rating"] = game[3]
-        gamedict["gameplay"] = game[4]
+        gameplay = game[4]
+        if gameplay is None:
+            gameplay = 0
+        gamedict["gameplay"] = gameplay
         # get genres for the game
         genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
         curs.execute(genre_sql)
@@ -108,7 +111,7 @@ def get_collection_by_id(cid):
 
 
     result3 = {
-        "name": collection_name[0],
+        "name": collection_name[0][0],
         "games": gamelist
     }
     return result3
