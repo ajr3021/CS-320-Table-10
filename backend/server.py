@@ -92,7 +92,7 @@ def makeGame(vid):
     esrb = str(request.args.get("esrb_rating"))
     image = str(request.args.get("image"))
     desc = str(request.args.get("description"))
-    sql = f"INSERT INTO video_game(vid, esb_rating, title, image, description) VALUES ({vid}, {esrb}, {title}, {image}, {desc});"
+    sql = f"INSERT INTO video_game(vid, esrb_rating, title, image, description) VALUES ({vid}, {esrb}, {title}, {image}, {desc});"
 
     curs.execute(sql)
     conn.commit()
