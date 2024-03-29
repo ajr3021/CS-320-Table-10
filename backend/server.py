@@ -51,7 +51,7 @@ def index():
 
     return result
 
-@app.route("/api/collection/<cid>")
+@app.route("/api/collection/collection/<cid>")
 @cross_origin(origins="*")
 def get_collection_by_id(cid):
     sql1 = f"SELECT cname FROM collection WHERE cid={cid};"
@@ -114,7 +114,7 @@ def get_collection_by_id(cid):
     return result3
 # tested ^
 
-@app.route("/api/collection/<uid>")
+@app.route("/api/collection/user/<uid>")
 @cross_origin(origins="*")
 def get_collection_by_user(uid):
     sql = f"SELECT cname as name, COUNT(vg.vid) AS numGames, SUM(endtime-starttime) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid = {uid} GROUP BY collection.cid;"
