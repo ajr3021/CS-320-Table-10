@@ -129,13 +129,63 @@ def get_collection_by_user(uid):
 @app.route("/api/videogame/", methods=['GET'])
 @cross_origin(origins="*")
 def get_random_videogame():
-    sql = f"SELECT * FROM video_game ORDER BY RANDOM() LIMIT 1;"
+    game_sql = f"SELECT vid FROM video_game ORDER BY RANDOM() LIMIT 1;"
+    curs.execute(game_sql)
+    vid_sql = curs.fetchall()
+    vid = vid_sql[0][0]
 
-    curs.execute(sql)
-    result = curs.fetchall()
+    gamedict = dict()
+    title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
+    curs.execute(title_sql)
+    title = curs.fetchall()
+    gamedict["title"] = title
+
+    esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
+    curs.execute(esrb_sql)
+    esrb = curs.fetchall()
+    gamedict["esrb_rating"] = esrb
+
+    rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
+    curs.execute(rating_sql)
+    rating = curs.fetchall()
+    gamedict["rating"] = rating
+
+    gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid};"
+    curs.execute(gameplay_sql)
+    gameplay = curs.fetchall()
+    gamedict["gameplay"] = gameplay
+
+    # get genres for the game
+    genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
+    curs.execute(genre_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for lst in temp:
+        temp2.append(lst[0])
+    gamedict["genres"] = temp2
+    # get the platforms the game is on
+    platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
+    curs.execute(platform_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for item in temp:
+        newdict = dict()
+        newdict["platform"] = item[0]
+        newdict["price"] = item[1]
+        temp2.append(newdict)
+    gamedict["platforms"] = temp2
+    # get the developers of the game
+    developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
+    curs.execute(developer_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for lst in temp:
+        temp2.append(lst[0])
+    gamedict["developers"] = temp2
+
     conn.commit()
 
-    return result
+    return gamedict
 
 
 @app.route("/api/friends/<uid>", methods=['GET'])
