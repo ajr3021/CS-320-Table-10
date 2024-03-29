@@ -1,5 +1,7 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from flask_bcrypt import Bcrypt 
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -12,6 +14,8 @@ load_dotenv()
 
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
+
+bcrypt = Bcrypt(app)
 
 username = os.environ.get('user')
 password = os.environ.get('password')
@@ -36,6 +40,8 @@ conn = psycopg2.connect(**params)
 curs = conn.cursor()
 print("Database connection established")
 
+LOGGED_IN_USER_ID = 0
+
 
 
 #index route
@@ -49,6 +55,61 @@ def index():
     conn.commit()
 
     return result
+
+@app.route("/api/signup", methods=["POST"])
+@cross_origin(origins="*")
+def signup():
+
+    data = request.get_json(force=True)
+
+    username = data['username']
+    password = data['password']
+    firstname = data['firstname']
+    lastname = data['lastname']
+    email = data['email']
+
+    sql = "SELECT COUNT(*) from player"
+
+    curs.execute(sql)
+    result = curs.fetchall() 
+    conn.commit()
+
+    uid = result[0][0] + 1
+    
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8') 
+
+    dt = datetime.now(timezone.utc)
+
+    sql = f"INSERT INTO player (uid, username, password, firstname, lastname, lastaccessdate, email, creationdate) VALUES('{uid}','{username}', '{hashed_password}', '{firstname}', '{lastname}', '{dt}', '{email}', '{dt}');"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return result
+
+@app.route("/api/login", methods=["POST"])
+@cross_origin(origins="*")
+def login():
+
+    data = request.get_json(force=True)
+
+    username = data['username']
+    password = data['password']
+
+    sql = f"SELECT password, uid FROM player WHERE username='{username}';"
+
+    curs.execute(sql)
+    result = curs.fetchall() 
+    conn.commit()
+
+    hashed_password = result[0][0]
+
+    is_valid = bcrypt.check_password_hash(hashed_password, password)
+
+    if is_valid:
+        LOGGED_IN_USER_ID = result[0][1]
+        return {}, 200
+    return {}, 201
         
 @app.route("/api/collection/<cid>")
 @cross_origin(origins="*")
