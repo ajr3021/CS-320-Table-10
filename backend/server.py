@@ -141,7 +141,7 @@ def get_random_videogame():
 @app.route("/api/friends/<uid>", methods=['GET'])
 @cross_origin(origins="*")
 def get_friends(uid):
-    sql = f"SELECT * FROM friends WHERE UID = {uid};"
+    sql = f"SELECT username FROM friends LEFT JOIN players ON friends.fid = players.uid WHERE UID = {uid};"
 
     curs.execute(sql)
     result = curs.fetchall()
