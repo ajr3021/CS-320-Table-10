@@ -112,10 +112,7 @@ def findByEmail(uid):
             #the uid of the name of the person is not already followed by the user
     email = str(request.args.get("email"))
     #Statement
-    sql = f"SELECT x.username, x.uid FROM 
-        (SELECT username, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN \
-            (SELECT uid FROM friends WHERE fid = {uid}) ) \
-        as x WHERE uid != {uid};"
+    sql = f"SELECT x.username, x.uid FROM (SELECT username, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN (SELECT uid FROM friends WHERE fid = {uid}) ) as x WHERE uid != {uid};"
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
