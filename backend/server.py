@@ -1,6 +1,7 @@
 from flask import Flask
+from flask import request
 from flask_cors import CORS, cross_origin
-
+import datetime
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -76,39 +77,53 @@ def delete_collection_by_id(cid):
 @app.route("/api/videogame/<vid>", methods=['GET'])
 @cross_origin(origins="*")
 def getGame(vid):
-    sql = f"SELECT * FROM video_game WHERE vid={vid};"
+    sql = "SELECT * FROM video_game WHERE vid=%s;"
 
-    curs.execute(sql)
+    curs.execute(sql, (vid,))
     result = curs.fetchall()#This should always be of size one. Otherwise database has an issue.
     conn.commit()
 
     return result, 200
 #Use route parameters. Why not? May change in the future.
+#THIS WORKS!!
 @app.route("/api/videogame/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def makeGame(vid):
-    vid = int(vid)
+    vid = str(vid)
     title = str(request.args.get("title"))#Get all external data from parameters.
     esrb = str(request.args.get("esrb_rating"))
     image = str(request.args.get("image"))
     desc = str(request.args.get("description"))
-    sql = f"INSERT INTO video_game(vid, esrb_rating, title, image, description) VALUES ({vid}, {esrb}, {title}, {image}, {desc});"
-
-    curs.execute(sql)
+    #Works
+    sql = "INSERT INTO video_game(vid, esrb_rating, title, image, description) VALUES (%s, %s, %s, %s, %s);"
+    #Function below works. vid gets converted.
+    curs.execute(sql, (vid, esrb, title, image, desc))
     conn.commit()
 
-    return 200
-#'2021-05-20 12:07:18'
+    return {}, 200
+
+#Formatted Data: '23:19'
+#THIS WORKS!!
 @app.route("/api/videogame/<uid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def addPlaytime(uid, vid):
-    startTime = str(request.args.get("starttime"))
-    endTime = str(request.args.get("endtime"))
+    sTime = str(request.args.get("starttime"))
+    sTimeNumbers = sTime.split(':')
 
-    sql = f"INSERT INTO gameplay(uid, vid, starttime, endtime) VALUES ({uid}, {vid}, {startTime}, {endTime});"
-    curs.execute(sql)#We can change this from format string to data later.
+    startTime = datetime.datetime.now()
+    startTime = startTime.replace(hour = int(sTimeNumbers[0]),minute = int(sTimeNumbers[1]))
+    
+    eTime = str(request.args.get("endtime"))
+    eTimeNumbers = eTime.split(':')
+
+    endTime = datetime.datetime.now()
+    endTime = endTime.replace(hour = int(eTimeNumbers[0]),minute = int(eTimeNumbers[1]))
+    
+    sql = "INSERT INTO gameplay(uid, vid, starttime, endtime) VALUES (%s, %s, %s, %s);"
+
+    curs.execute(sql, (uid, vid, startTime, endTime))#We can change this from format string to data later.
     conn.commit()
-    return 200
+    return {}, 200
 
 #WIP function. Comment out if needed.
 #seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
@@ -123,6 +138,7 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
     #Prevent unwanted sql statements.
     if sortBy != "DESC" and sortBy != "ASC":
         return {}, 400
+
     #Sort alphabetically and release date-wise ascending
     #Tables used:
         #video_game (name, esrb rating)
@@ -132,8 +148,9 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
         #development (needed to get all developers of a game)
         #rates (needed to get average of all user ratings)
     #Development and publishing are BOTH going to be arrays. I could get them in a separate sql query and return a new list of resulting tuples(?)
-    
+
     sql = f"SELECT vid FROM video_game INNER JOIN game_platform ON game_platform.vid = video_game.vid WHERE {searchBy}={data} ORDER BY video_game.title ASC, game_platform.release_date ASC;"
+
     games_results = []
     curs.execute(sql)
     conn.commit()
