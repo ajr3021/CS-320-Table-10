@@ -460,7 +460,8 @@ def findByEmail(uid):
         #Get names where...
             #Get name from users where email fragment matches
             #the uid of the name of the person is not already followed by the user
-    email = str(request.args.get("email"))
+    data = request.get_json(force=True)
+    email = str(data["email"])
     #Statement
     sql = f"SELECT x.username, x.uid FROM (SELECT username, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN (SELECT uid FROM friends WHERE fid = {uid}) ) as x WHERE uid != {uid};"
 
