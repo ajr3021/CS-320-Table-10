@@ -452,11 +452,8 @@ def delete_collection_by_id(cid):
 
 @app.route("/api/user/follow/<uid>", methods=['POST'])
 @cross_origin(origins="*")
-def follow_user():
-    data = request.get_json(force=True)
-    followerUid = int(data["followerUid"])#Get all external data from parameters.
-    followedUid = int(data["followedUid"])
-    sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
+def follow_user(uid):
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
     #Returns tuple of empty array, status number.
