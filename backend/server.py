@@ -120,7 +120,7 @@ def get_collection_by_id(cid):
 @app.route("/api/collection/user/<uid>")
 @cross_origin(origins="*")
 def get_collection_by_user(uid):
-    sql = f"SELECT cname as name, COUNT(vg.vid) AS numGames, SUM(endtime-starttime) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid = {uid} GROUP BY collection.cid;"
+    sql = f"SELECT cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid = {uid} GROUP BY collection.cid;"
 
     curs.execute(sql)
     result = curs.fetchall()
