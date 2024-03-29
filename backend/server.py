@@ -1,19 +1,20 @@
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
-from flask_bcrypt import Bcrypt 
+from flask_bcrypt import Bcrypt
 from datetime import datetime, timezone
-#(imports requiered for data entry. Source files do not exist on git)
-#import Data.data_loader as dl
-#import pandas as pd
 
-app = Flask(__name__)   #Creates flask application
-cors = CORS(app)    #Enables Cross origin resource sharing (domain a can use stuff from domain b)
-app.config['CORS_HEADERS'] = 'Content-Type' #??? Not sure
+# (imports requiered for data entry. Source files do not exist on git)
+# import Data.data_loader as dl
+# import pandas as pd
+
+app = Flask(__name__)  # Creates flask application
+cors = CORS(app)  # Enables Cross origin resource sharing (domain a can use stuff from domain b)
+app.config['CORS_HEADERS'] = 'Content-Type'  # ??? Not sure
 
 import os
 from dotenv import load_dotenv
 
-load_dotenv()   #Loads .env into OS environmental variables while process is running
+load_dotenv()  # Loads .env into OS environmental variables while process is running
 
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
@@ -29,8 +30,9 @@ dbName = "p320_10"
 server = SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                             ssh_username=username,
                             ssh_password=password,
-                            remote_bind_address=('127.0.0.1', 5432))    #SSH tunnel made between application and database.
-server.start()  #Start the ssh tunnel
+                            remote_bind_address=(
+                            '127.0.0.1', 5432))  # SSH tunnel made between application and database.
+server.start()  # Start the ssh tunnel
 print("SSH tunnel established")
 params = {
     'database': dbName,
@@ -40,32 +42,32 @@ params = {
     'port': server.local_bind_port
 }
 
-
-conn = psycopg2.connect(**params)   #Create a connection object for the database with a given account.
-curs = conn.cursor() # set up connection's ability to send commands.
+conn = psycopg2.connect(**params)  # Create a connection object for the database with a given account.
+curs = conn.cursor()  # set up connection's ability to send commands.
 print("Database connection established")
 
-#To add data into the database using python. (The package being used is not on git)
-#df = pd.DataFrame({'gid': [11], 'gname': ['test']})
-#dl.dataframe_to_postgres(conn, curs, df, 'genre')
+
+# To add data into the database using python. (The package being used is not on git)
+# df = pd.DataFrame({'gid': [11], 'gname': ['test']})
+# dl.dataframe_to_postgres(conn, curs, df, 'genre')
 
 
-#index route
-@app.route("/message") #The application route.
+# index route
+@app.route("/message")  # The application route.
 @cross_origin(origins="*")
 def index():
     sql = "SELECT * FROM collection;"
 
     curs.execute(sql)
-    result = curs.fetchall() 
+    result = curs.fetchall()
     conn.commit()
 
     return result
 
+
 @app.route("/api/signup", methods=["POST"])
 @cross_origin(origins="*")
 def signup():
-
     data = request.get_json(force=True)
 
     username = data['username']
@@ -75,6 +77,7 @@ def signup():
     email = data['email']
 
     sql = "SELECT COUNT(*) from player"
+
 
 @app.route("/api/login", methods=["POST"])
 @cross_origin(origins="*")
@@ -88,7 +91,7 @@ def login():
     sql = f"SELECT password, uid FROM player WHERE username='{username}';"
 
     curs.execute(sql)
-    result = curs.fetchall() 
+    result = curs.fetchall()
     conn.commit()
 
     hashed_password = result[0][0]
@@ -99,8 +102,9 @@ def login():
         LOGGED_IN_USER_ID = result[0][1]
         return {}, 200
     return {}, 201
-        
-@app.route("/api/collection/<cid>")#By default only GET requests are handled.
+
+
+@app.route("/api/collection/<cid>")  # By default only GET requests are handled.
 @cross_origin(origins="*")
 def get_collection_by_id(cid):
     sql1 = f"SELECT cname FROM collection WHERE cid={cid};"
@@ -165,12 +169,13 @@ def get_collection_by_id(cid):
         gamedict["developers"] = temp2
         gamelist.append(gamedict)
 
-
     result3 = {
         "name": collection_name[0][0],
         "games": gamelist
     }
     return result3
+
+
 # tested ^
 
 @app.route("/api/collection/user/<uid>")
@@ -185,10 +190,10 @@ def get_collection_by_user(uid):
     print(result)
 
     final_result = []
-    
+
     for i in range(len(result)):
         final_result.append({
-            "cid":result[i][0],
+            "cid": result[i][0],
             "name": result[i][1],
             "numGames": result[i][2],
             "totalTimePlayed": result[i][3]
@@ -197,6 +202,7 @@ def get_collection_by_user(uid):
     print(final_result)
 
     return final_result
+
 
 @app.route("/api/collection/user")
 @cross_origin(origins="*")
@@ -208,10 +214,10 @@ def get_collection_by_current_user():
     conn.commit()
 
     final_result = []
-    
+
     for i in range(len(result)):
         final_result.append({
-            "cid":result[i][0],
+            "cid": result[i][0],
             "name": result[i][1],
             "numGames": result[i][2],
             "totalTimePlayed": result[i][3]
@@ -297,6 +303,7 @@ def get_random_videogame():
 
     return gamedict
 
+
 @app.route("/api/videogame/<vid>", methods=['GET'])
 @cross_origin(origins="*")
 def get_videogame_by_id(vid):
@@ -366,16 +373,18 @@ def get_videogame_by_id(vid):
 
     return gamedict
 
+
 @app.route("/api/friends/<uid>", methods=['GET'])
 @cross_origin(origins="*")
 def get_friends(uid):
     sql = f"SELECT username FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {uid};"
 
     curs.execute(sql)
-    result = curs.fetchall() 
+    result = curs.fetchall()
     conn.commit()
 
     return result
+
 
 @app.route("/api/collection/<cid>", methods=['PUT'])
 @cross_origin(origins="*")
@@ -390,18 +399,20 @@ def change_collection_title_by_id(cid):
 
 
 @app.route("/api/collection/<cid>", methods=['DELETE'])
-@cross_origin(origins="*") #URL can be accessed from anywhere(?)
+@cross_origin(origins="*")  # URL can be accessed from anywhere(?)
 def delete_collection_by_id(cid):
-    sql = f"DELETE FROM collection WHERE cid={cid};"    #SQL DML statement to remove a given collection.
+    sql = f"DELETE FROM collection WHERE cid={cid};"  # SQL DML statement to remove a given collection.
 
-    curs.execute(sql)  #Execute sql statement
-    conn.commit() #Commit database change.
+    curs.execute(sql)  # Execute sql statement
+    conn.commit()  # Commit database change.
 
     return {}, 200
-#STATE:
-    #Backend urls respond properly
-    #SQL statements should work in theory, tested them on a database simulation.
-    #Tested the one statement that I wasn't sure about working.
+
+
+# STATE:
+# Backend urls respond properly
+# SQL statements should work in theory, tested them on a database simulation.
+# Tested the one statement that I wasn't sure about working.
 
 @app.route("/api/user/follow/<uid>", methods=['POST'])
 @cross_origin(origins="*")
@@ -409,9 +420,9 @@ def follow_user(uid):
     print("Logged id:" + str(LOGGED_IN_USER_ID) + " Friend id: " + str(uid))
     sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
     print("followUser Called")
-    curs.execute(sql)   #Execute sql statement
-    conn.commit()   #Commits change.
-    #Returns tuple of empty array, status number.
+    curs.execute(sql)  # Execute sql statement
+    conn.commit()  # Commits change.
+    # Returns tuple of empty array, status number.
     return {}, 200
 
 
@@ -419,10 +430,10 @@ def follow_user(uid):
 @cross_origin(origins="*")
 def unfollow_user(uid):
     sql = f"DELETE FROM friends WHERE uid={LOGGED_IN_USER_ID} AND fid={uid};"
-    curs.execute(sql)   #Execute sql statement
+    curs.execute(sql)  # Execute sql statement
     conn.commit()
     print("unfollowUser Called")
-    #Return tuple of list of users, status number.
+    # Return tuple of list of users, status number.
     return {}, 200
 
 
