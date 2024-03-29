@@ -2,6 +2,9 @@ from flask import Flask, request
 from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from datetime import datetime, timezone
+#(imports requiered for data entry. Source files do not exist on git)
+#import Data.data_loader as dl
+#import pandas as pd
 
 app = Flask(__name__)   #Creates flask application
 cors = CORS(app)    #Enables Cross origin resource sharing (domain a can use stuff from domain b)
@@ -42,6 +45,9 @@ conn = psycopg2.connect(**params)   #Create a connection object for the database
 curs = conn.cursor() # set up connection's ability to send commands.
 print("Database connection established")
 
+#To add data into the database using python. (The package being used is not on git)
+#df = pd.DataFrame({'gid': [11], 'gname': ['test']})
+#dl.dataframe_to_postgres(conn, curs, df, 'genre')
 
 
 #index route
