@@ -27,7 +27,7 @@ const VideoGamePreview = ({games = [], deleteGame=(id) => {}}) => {
                 <div className="gameCard-info">
                     <div>
                         <div className="top">
-                            <h1 onClick={() => redirectToGame(game.vid)}>{game.title}</h1>
+                            <h1 onClick={() => redirectToGame(game.vid)}>{game.name}</h1>
                             <small>ESRB Rating: {game.esrb_rating}</small>
                         </div>
                         <div className="middle">

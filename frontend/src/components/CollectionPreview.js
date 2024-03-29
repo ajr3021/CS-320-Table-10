@@ -7,38 +7,19 @@ const CollectionPreview = ({selected}) => {
   const [name, setName] = useState("");
 
   useEffect(() => {
-    setData([
-      {
-        "cid": 0,
-        "name": "Collection 1",
-        "numGames": 3,
-        "totalTimePlayed": "4:56"
-      },
-      {
-        "cid": 1,
-        "name": "Collection 2",
-        "numGames": 33,
-        "totalTimePlayed": "14:56"
-      },
-      {
-        "cid": 2,
-        "name": "Classics",
-        "numGames": 5,
-        "totalTimePlayed": "46:56"
-      },
-      {
-        "cid": 3,
-        "name": "New",
-        "numGames": 1,
-        "totalTimePlayed": "0:56"
-      },
-      {
-        "cid": 4,
-        "name": "Adventure Games",
-        "numGames": 3,
-        "totalTimePlayed": "6:06"
-      }
-    ])
+    fetch(`http://localhost:5050/api/collection/user/1`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+          return res.json();
+      }).then(data => {
+          setData(data);
+          console.log(data)
+      })
   }, [])
 
   const deleteElement = (id) => {

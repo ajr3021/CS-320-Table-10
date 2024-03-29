@@ -52,6 +52,20 @@ const Users = () => {
             "username": "jeff",
             "email": "jeff@gmail.com",
         },
+
+        fetch(`http://localhost:5050/api/friends`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            setFriends(data);
+            console.log(data)
+        })
     ])}, []);
 
     const displayUsers = () => {

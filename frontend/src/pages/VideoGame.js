@@ -15,63 +15,35 @@ const VideoGame = () => {
     let checkedCollectionIds = new Set();
 
     useEffect(() => {
-        setData({
-            "vid": "2",
-            "title": "Counter Strike",
-            "esrb_rating": "T",
-            "banner": "https://steamcdn-a.akamaihd.net/steam/apps/10/header.jpg?t=1528733245",
-            "rating": 4.5,
-            "gameplay": 100.7,
-            "genres": [
-              "Action",
-              "Horror"
-            ],
-            "platforms": [
-              "Windows",
-              "Xbox 360"
-            ],
-            "developers": [
-              "Windows",
-              "Xbox 360"
-            ],
-            "price": 40,
-            "description": "Play the world's number 1 online action game. Engage in an incredibly realistic brand of terrorist warfare in this wildly popular team-based game. Ally with teammates to complete strategic missions. Take out enemy sites. Rescue hostages. Your role affects your team's success. Your team's success affects your role.",
-          })
+          fetch(`http://localhost:5050/api/videogame/${videoGameId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+  
+            method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            setData(data);
+            console.log(data)
+        })
     }, [])
 
     useEffect(() => {
-        setCollections([
-            {
-              "cid": 0,
-              "name": "Collection 1",
-              "numGames": 3,
-              "totalTimePlayed": "4:56"
+        fetch(`http://localhost:5050/api/collection/user/1`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             },
-            {
-              "cid": 1,
-              "name": "Collection 2",
-              "numGames": 33,
-              "totalTimePlayed": "14:56"
-            },
-            {
-              "cid": 2,
-              "name": "Classics",
-              "numGames": 5,
-              "totalTimePlayed": "46:56"
-            },
-            {
-              "cid": 12,
-              "name": "New",
-              "numGames": 1,
-              "totalTimePlayed": "0:56"
-            },
-            {
-              "cid": 4,
-              "name": "Adventure Games",
-              "numGames": 3,
-              "totalTimePlayed": "6:06"
-            }
-          ])
+
+            method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            setCollections(data);
+            console.log("Collections: " + data)
+        })
     }, [])
 
     const displayTime = () => {
