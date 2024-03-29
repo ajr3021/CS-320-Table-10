@@ -3,14 +3,14 @@ from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from datetime import datetime, timezone
 
-app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+app = Flask(__name__)   #Creates flask application
+cors = CORS(app)    #Enables Cross origin resource sharing (domain a can use stuff from domain b)
+app.config['CORS_HEADERS'] = 'Content-Type' #??? Not sure
 
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()   #Loads .env into OS environmental variables while process is running
 
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
@@ -24,8 +24,8 @@ dbName = "p320_10"
 server = SSHTunnelForwarder(('starbug.cs.rit.edu', 22),
                             ssh_username=username,
                             ssh_password=password,
-                            remote_bind_address=('127.0.0.1', 5432))
-server.start()
+                            remote_bind_address=('127.0.0.1', 5432))    #SSH tunnel made between application and database.
+server.start()  #Start the ssh tunnel
 print("SSH tunnel established")
 params = {
     'database': dbName,
@@ -36,14 +36,14 @@ params = {
 }
 
 
-conn = psycopg2.connect(**params)
-curs = conn.cursor()
+conn = psycopg2.connect(**params)   #Create a connection object for the database with a given account.
+curs = conn.cursor() # set up connection's ability to send commands.
 print("Database connection established")
 
 
 
 #index route
-@app.route("/message")
+@app.route("/message") #The application route.
 @cross_origin(origins="*")
 def index():
     sql = "SELECT * FROM collection;"
@@ -54,7 +54,7 @@ def index():
 
     return result
         
-@app.route("/api/collection/<cid>")
+@app.route("/api/collection/<cid>")#By default only GET requests are handled.
 @cross_origin(origins="*")
 def get_collection_by_id(cid):
     sql1 = f"SELECT cname FROM collection WHERE cid={cid};"
@@ -202,7 +202,7 @@ def get_friends(uid):
     sql = f"SELECT username FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {uid};"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    result = curs.fetchall() 
     conn.commit()
 
     return result
@@ -220,38 +220,41 @@ def change_collection_title_by_id(cid):
 
 
 @app.route("/api/collection/<cid>", methods=['DELETE'])
-@cross_origin(origins="*")
+@cross_origin(origins="*") #URL can be accessed from anywhere(?)
 def delete_collection_by_id(cid):
-    sql = f"DELETE FROM collection WHERE cid={cid};"
+    sql = f"DELETE FROM collection WHERE cid={cid};"    #SQL DML statement to remove a given collection.
 
-    curs.execute(sql)
-    conn.commit()
+    curs.execute(sql)  #Execute sql statement
+    conn.commit() #Commit database change.
 
+    return {}, 200
+#STATE:
+    #Backend urls respond properly
+    #SQL statements should work in theory, tested them on a database simulation.
+    #Tested the one statement that I wasn't sure about working.
+@app.route("/api/user/follow", methods=['POST'])
+@cross_origin(origins="*")
+def follow_user():
+    followerUid = int(request.args.get("followerUid"))#Get all external data from parameters.
+    followedUid = int(request.args.get("followedUid"))
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
+    print("followUser Called")
+    curs.execute(sql)   #Execute sql statement
+    conn.commit()   #Commits change.
+    #Returns tuple of empty array, status number.
     return {}, 200
 
 
-@app.route("/api/collection/<cid>/<vid>", methods=['POST'])
+@app.route("/api/user/follow", methods=['DELETE'])
 @cross_origin(origins="*")
-def insert_videogame_into_collection(cid, vid):
-    sql = f"INSERT INTO Collection_Has (CID, VID) VALUES ({cid}, {vid});"
-    sql2 = f"SELECT * FROM video_game WHERE VID = {vid};"
-
-    curs.execute(sql)
-    curs.execute(sql2)
-    result = curs.fetchall()
+def unfollow_user():
+    followerUid = int(request.args.get("followerUid"))
+    followedUid = int(request.args.get("followedUid"))
+    sql = f"DELETE FROM friends WHERE fid={followerUid} AND uid={followedUid};"
+    curs.execute(sql)   #Execute sql statement
     conn.commit()
-
-    return result
-
-
-@app.route("/api/collection/<cid>/<vid>", methods=['DELETE'])
-@cross_origin(origins="*")
-def delete_videogame_from_collection(cid, vid):
-    sql = f"DELETE FROM Collection_Has WHERE CID = {cid} and VID = {vid};"
-
-    curs.execute(sql)
-    conn.commit()
-
+    print("unfollowUser Called")
+    #Return tuple of list of users, status number.
     return {}, 200
 
 
