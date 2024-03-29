@@ -20,7 +20,7 @@ from sshtunnel import SSHTunnelForwarder
 
 bcrypt = Bcrypt(app)
 
-LOGGED_IN_USER_ID = 0
+LOGGED_IN_USER_ID = 1
 
 username = os.environ.get('user')
 password = os.environ.get('password')
@@ -366,21 +366,33 @@ def get_videogame_by_id(vid):
 
     return gamedict
 
-@app.route("/api/friends/<uid>", methods=['GET'])
+@app.route("/api/friends", methods=['GET'])
 @cross_origin(origins="*")
-def get_friends(uid):
-    sql = f"SELECT username FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {uid};"
+def get_friends():
+    sql = f"SELECT username, email FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
 
     curs.execute(sql)
     result = curs.fetchall() 
     conn.commit()
 
-    return result
+    print(result)
+
+    final_result = []
+
+    for i in range(len(result)):
+        final_result.append({
+            "username": result[i][0],
+            "email": result[i][1]
+        })
+
+    return final_result
 
 @app.route("/api/collection/<cid>", methods=['PUT'])
 @cross_origin(origins="*")
 def change_collection_title_by_id(cid):
-    title = request.form['title']
+    data = request.get_json(force=True)
+
+    title = data['title']
     sql = f"UPDATE collection SET cname='{title}' WHERE cid={cid};"
 
     curs.execute(sql)
@@ -405,10 +417,10 @@ def delete_collection_by_id(cid):
 @app.route("/api/user/follow", methods=['POST'])
 @cross_origin(origins="*")
 def follow_user():
-    followerUid = int(request.args.get("followerUid"))#Get all external data from parameters.
-    followedUid = int(request.args.get("followedUid"))
+    data = request.get_json(force=True)
+    followerUid = int(data["followerUid"])#Get all external data from parameters.
+    followedUid = int(data["followedUid"])
     sql = f"INSERT INTO friends(uid, fid) VALUES ({followedUid}, {followerid});"
-    print("followUser Called")
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
     #Returns tuple of empty array, status number.
