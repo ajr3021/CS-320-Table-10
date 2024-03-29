@@ -36,6 +36,8 @@ conn = psycopg2.connect(**params)
 curs = conn.cursor()
 print("Database connection established")
 
+
+
 #index route
 @app.route("/message")
 @cross_origin(origins="*")
