@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 const CollectionPreview = ({selected}) => {
   const [data, setData] = useState([]);
   const navigate = useNavigate();
+  const [name, setName] = useState("");
 
   useEffect(() => {
     setData([
@@ -52,9 +53,9 @@ const CollectionPreview = ({selected}) => {
 
   const noColletions = () => {
     return (
-      <tr>
-        <td>No Collections to Display</td>
-      </tr>
+      <div>
+        <h1>No Collections to Display</h1>
+      </div>
     )
   }
 
@@ -63,7 +64,26 @@ const CollectionPreview = ({selected}) => {
   } 
 
   const createCollection = (e) => {
+    e.preventDefault();
 
+    if(e.target.form[0].value.length !== 0){
+      const result = {
+        "cid": data.length,
+        "name": e.target.form[0].value,
+        "numGames": 0,
+        "totalTimePlayed": "0:00"
+      }
+
+      // when there is the backend, send the request and record the response
+
+      setData([...data, result]);
+
+      setName("");
+    }
+  }
+
+  const nameChanged = (e) => {
+    setName(e.target.value);
   }
 
   const hasCollections = () => {
@@ -94,7 +114,7 @@ const CollectionPreview = ({selected}) => {
     <div id='collections-container'>
         <div className="banner" id='new-collection-form-container'>
             <form action="">
-                <input type="text" name="" id="" placeholder="Collection Name..."/>
+                <input type="text" name="" id="" onChange={(e) => nameChanged(e)} value={name} placeholder="Collection Name..."/>
                 <button className="btn-primary" onClick={(e) => createCollection(e)}>Create</button>
             </form>
           </div>

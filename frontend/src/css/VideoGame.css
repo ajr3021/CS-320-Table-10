@@ -38,14 +38,22 @@
 .padded ul {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
-.game-form {
+.game-form form{
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    align-items: baseline;
+}
+
+.game-form form input {
+    margin-right: 5px;
+}
+
+.game-form form button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 20px;
 }
 
 .info {
@@ -63,22 +71,24 @@
     margin-right: 10px;
 }
 
-.time-form form {
+.time-form {
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .time-form .not-button {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
 }
 
-.time-form form div {
+.time-form div {
     display: flex;
     flex-direction: column;
 }
 
-.time-form form button{
+.time-form button{
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -86,13 +96,7 @@
 }
 
 #collections-form {
-    margin-left: 10px;
-}
-
-#collections-form form {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    margin-left: 20px;
 }
 
 #collections-form form button {
@@ -107,12 +111,24 @@
 
 .collection-checkboxes {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    margin-top: 50px;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 2rem;
 }
 
 .forms {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    margin-top: 30px;
+}
+
+.bottom-forms form{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.bottom-forms form button {
+    width: 100%;
+    padding: 10px;
 }

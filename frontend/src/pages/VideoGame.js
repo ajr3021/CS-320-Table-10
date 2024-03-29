@@ -12,6 +12,8 @@ const VideoGame = () => {
 
     let timePlayedInSeconds = 0;
 
+    let checkedCollectionIds = new Set();
+
     useEffect(() => {
         setData({
             "vid": "2",
@@ -58,7 +60,7 @@ const VideoGame = () => {
               "totalTimePlayed": "46:56"
             },
             {
-              "cid": 3,
+              "cid": 12,
               "name": "New",
               "numGames": 1,
               "totalTimePlayed": "0:56"
@@ -90,7 +92,27 @@ const VideoGame = () => {
     const play = (e) => {
         e.preventDefault();
        
-      
+        console.log(e.target.form[0].value);
+        console.log(e.target.form[1].value);
+    }
+
+    const rate = (e) => {
+        e.preventDefault();
+
+        console.log(e.target.form[0].value);
+    }
+
+    const addToCollection = (e) => {
+        e.preventDefault();
+        console.log(checkedCollectionIds);
+    }
+
+    const updateMap = (id) => {
+        if(checkedCollectionIds.has(id)){
+            checkedCollectionIds.delete(id);
+        }else{
+            checkedCollectionIds.add(id);
+        }
     }
 
     return (
@@ -111,8 +133,10 @@ const VideoGame = () => {
                     <div className="info">
                         <div className="ratings">
                             <h1>Ratings:</h1>
-                            <p>ESRB: {data.esrb_rating}</p>
-                            <p>Quality Rating: {data.rating}</p>
+                            <ul>
+                                <li>ESRB: {data.esrb_rating}</li>
+                                <li>Quality Rating: {data.rating}</li>
+                            </ul>
                         </div>
                         <div className="genres">
                             <h1>Genres:</h1>
@@ -144,51 +168,51 @@ const VideoGame = () => {
                                 } )}
                             </ul>
                         </div>
-                        <div className="banner game-form">
-                            <h1>Rate Game:</h1>
-                            <form action="">
-                                <input type="number" name="" id="rateGame" min={0} max={10} placeholder={0}/>
-                                <button className="btn-primary" onClick={() => {}}>Rate</button>
-                            </form>
-                        </div>
                     </div>
                     <div className="forms">
-                            <div className="banner game-form">
-                                <h1>Play Game:</h1>
-                                <div className="time-form">
+                            <div className="bottom-forms">
                                     <form action="">
-                                        <div className="not-button">
-                                        <div><label htmlFor="start">Start Time</label>
-                                        <input type="time" id="start"/></div>
-                                        
-                                        <div>
-                                        <label htmlFor="stop">End Time</label>
-                                        <input type="time" id="stop"/>
+                                        <h1>Play Game:</h1>
+                                        <div className="time-form">
+                                            <div className="not-button">
+                                            <div><label htmlFor="start">Start Time</label>
+                                            <input type="time" id="start"/></div>
+                                            
+                                            <div>
+                                            <label htmlFor="stop">End Time</label>
+                                            <input type="time" id="stop"/>
+                                            </div>
+                                            </div>
                                         </div>
-                                        </div>
-                                        
-                                        
                                         <button className="btn-primary" onClick={(e) => play(e)}>Submit Time</button>
                                     </form>
-                                </div>
+                                
                             
                             </div>
-                            <div id="collections-form">
-                                <h1>Add Game to Collection(s)</h1>
+                            <div id="collections-form" className="bottom-forms">
                                 <form action="">
+                                    <h1>Add Game to Collection(s)</h1>
                                     <div className="collection-checkboxes">
                                         {
                                             collections && collections.map((collection) => {
                                                 return (
                                                     <div className="collection-checkbox" key={collection.cid}>
-                                                        <input type="checkbox" name={collection.cid} id={collection.cid} />
+                                                        <input type="checkbox" name={collection.cid} id={collection.cid} onChange={() => updateMap(collection.cid)}/>
                                                         <label htmlFor={collection.cid}>{collection.name}</label>
                                                     </div>   
                                                 )
                                             })
                                         }
                                     </div>        
-                                    <button type="submit" className="btn-primary" onClick={(e) => {}}>Add</button>
+                                    <button type="submit" className="btn-primary" onClick={(e) => addToCollection(e)}>Add</button>
+                                </form>
+                            </div>
+
+                            <div className="game-form">
+                                <h1>Rate Game:</h1>
+                                <form action="">
+                                    <input type="number" name="" id="rateGame" min={1} max={5} placeholder={1}/>
+                                    <button className="btn-primary" onClick={(e) => rate(e)}>Rate</button>
                                 </form>
                             </div>
                         </div>
