@@ -2,6 +2,9 @@ from flask import Flask, request
 from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt 
 from datetime import datetime, timezone
+#(imports requiered for data entry. Source files do not exist on git)
+#import Data.data_loader as dl
+#import pandas as pd
 
 app = Flask(__name__)   #Creates flask application
 cors = CORS(app)    #Enables Cross origin resource sharing (domain a can use stuff from domain b)
@@ -42,6 +45,9 @@ conn = psycopg2.connect(**params)   #Create a connection object for the database
 curs = conn.cursor() # set up connection's ability to send commands.
 print("Database connection established")
 
+#To add data into the database using python. (The package being used is not on git)
+#df = pd.DataFrame({'gid': [11], 'gname': ['test']})
+#dl.dataframe_to_postgres(conn, curs, df, 'genre')
 
 
 #index route
@@ -128,7 +134,7 @@ def get_collection_by_id(cid):
 
         if gameplay is None:
             gameplay = 0
-        gamedict["gameplay"] = gameplay
+        gamedict["gameplay"] = int(gameplay)
         # get genres for the game
         genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
         curs.execute(genre_sql)
@@ -170,11 +176,13 @@ def get_collection_by_id(cid):
 @app.route("/api/collection/user/<uid>")
 @cross_origin(origins="*")
 def get_collection_by_user(uid):
-    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid = {uid} GROUP BY collection.cid;"
+    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid={uid} GROUP BY collection.cid;"
 
     curs.execute(sql)
     result = curs.fetchall()
     conn.commit()
+
+    print(result)
 
     final_result = []
     
@@ -185,6 +193,8 @@ def get_collection_by_user(uid):
             "numGames": result[i][2],
             "totalTimePlayed": result[i][3]
         })
+
+    print(final_result)
 
     return final_result
 
@@ -245,7 +255,7 @@ def get_random_videogame():
     rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
     curs.execute(rating_sql)
     rating = curs.fetchall()
-    gamedict["rating"] = rating[0][0]
+    gamedict["rating"] = int(rating[0][0])
 
     gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
     curs.execute(gameplay_sql)
@@ -272,7 +282,77 @@ def get_random_videogame():
         newdict["platform"] = item[0]
         newdict["price"] = item[1]
         temp2.append(newdict)
-    gamedict["platforms"] = temp2[0]
+    gamedict["platforms"] = temp2
+    # get the developers of the game
+    developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
+    curs.execute(developer_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for item in temp:
+        gamedict["price"] = item[1]
+        temp2.append(item[0])
+    gamedict["developers"] = temp2
+
+    conn.commit()
+
+    return gamedict
+
+@app.route("/api/videogame/<vid>", methods=['GET'])
+@cross_origin(origins="*")
+def get_videogame_by_id(vid):
+    gamedict = dict()
+
+    gamedict["vid"] = vid
+
+    title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
+    curs.execute(title_sql)
+    title = curs.fetchall()
+    gamedict["title"] = title[0][0]
+
+    description_sql = f"SELECT description FROM video_game WHERE vid = {vid};"
+    curs.execute(description_sql)
+    description = curs.fetchall()
+    gamedict["description"] = description[0][0]
+
+    image_sql = f"SELECT image FROM video_game WHERE vid = {vid};"
+    curs.execute(image_sql)
+    image = curs.fetchall()
+    gamedict["banner"] = image[0][0]
+
+    esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
+    curs.execute(esrb_sql)
+    esrb = curs.fetchall()
+    gamedict["esrb_rating"] = esrb[0][0]
+
+    rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
+    curs.execute(rating_sql)
+    rating = curs.fetchall()
+    gamedict["rating"] = int(rating[0][0])
+
+    gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
+    curs.execute(gameplay_sql)
+    gameplay = curs.fetchall()
+    if gameplay == []:
+        gameplay = 0
+    gamedict["gameplay"] = gameplay
+
+    # get genres for the game
+    genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
+    curs.execute(genre_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for lst in temp:
+        temp2.append(lst[0])
+    gamedict["genres"] = temp2
+    # get the platforms the game is on
+    platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
+    curs.execute(platform_sql)
+    temp = curs.fetchall()
+    temp2 = []
+    for item in temp:
+        gamedict["price"] = item[1]
+        temp2.append(item[0])
+    gamedict["platforms"] = temp2
     # get the developers of the game
     developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
     curs.execute(developer_sql)
@@ -285,7 +365,6 @@ def get_random_videogame():
     conn.commit()
 
     return gamedict
-
 
 @app.route("/api/friends/<uid>", methods=['GET'])
 @cross_origin(origins="*")
