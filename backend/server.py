@@ -304,6 +304,31 @@ def get_random_videogame():
     return gamedict
 
 
+@app.route("/api/collection/<cid>/<vid>",methods=['POST'])
+@cross_origin(origins="*")
+def insert_videogame_into_collection(cid,vid):
+    sql=f"INSERTINTOCollection_Has(CID,VID)VALUES({cid},{vid});"
+    sql2=f"SELECT*FROMvideo_gameWHEREVID={vid};"
+
+    curs.execute(sql)
+    curs.execute(sql2)
+    result=curs.fetchall()
+    conn.commit()
+
+    return result
+
+
+@app.route("/api/collection/<cid>/<vid>",methods=['DELETE'])
+@cross_origin(origins="*")
+def delete_videogame_from_collection(cid,vid):
+    sql=f"DELETEFROMCollection_HasWHERECID={cid}andVID={vid};"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return{},200
+
+
 @app.route("/api/videogame/<vid>", methods=['GET'])
 @cross_origin(origins="*")
 def get_videogame_by_id(vid):
