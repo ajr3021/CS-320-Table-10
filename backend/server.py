@@ -373,12 +373,7 @@ def get_videogame_by_id(vid):
 
     return gamedict
 
-<<<<<<< HEAD
 @app.route("/api/friends", methods=['GET'])
-=======
-
-@app.route("/api/friends/<uid>", methods=['GET'])
->>>>>>> eedfc9825e56f0f7b365221acf5baab1242ec5fb
 @cross_origin(origins="*")
 def get_friends():
     sql = f"SELECT username, email FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
@@ -432,7 +427,6 @@ def delete_collection_by_id(cid):
 
 @app.route("/api/user/follow/<uid>", methods=['POST'])
 @cross_origin(origins="*")
-<<<<<<< HEAD
 def follow_user():
     data = request.get_json(force=True)
     followerUid = int(data["followerUid"])#Get all external data from parameters.
@@ -441,15 +435,6 @@ def follow_user():
     curs.execute(sql)   #Execute sql statement
     conn.commit()   #Commits change.
     #Returns tuple of empty array, status number.
-=======
-def follow_user(uid):
-    print("Logged id:" + str(LOGGED_IN_USER_ID) + " Friend id: " + str(uid))
-    sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
-    print("followUser Called")
-    curs.execute(sql)  # Execute sql statement
-    conn.commit()  # Commits change.
-    # Returns tuple of empty array, status number.
->>>>>>> eedfc9825e56f0f7b365221acf5baab1242ec5fb
     return {}, 200
 
 
