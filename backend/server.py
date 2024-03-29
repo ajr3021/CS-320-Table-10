@@ -51,7 +51,9 @@ print("Database connection established")
 # df = pd.DataFrame({'gid': [11], 'gname': ['test']})
 # dl.dataframe_to_postgres(conn, curs, df, 'genre')
 
-
+#
+# LOGIN ROUTES
+#
 # index route
 @app.route("/message")  # The application route.
 @cross_origin(origins="*")
@@ -103,6 +105,10 @@ def login():
         return {}, 200
     return {}, 201
 
+
+#
+# COLLECTION ROUTES
+#
 
 @app.route("/api/collection/<cid>")  # By default only GET requests are handled.
 @cross_origin(origins="*")
@@ -226,6 +232,58 @@ def get_collection_by_current_user():
     return final_result
 
 
+@app.route("/api/collection/<cid>/<vid>",methods=['POST'])
+@cross_origin(origins="*")
+def insert_videogame_into_collection(cid,vid):
+    sql=f"INSERT INTO Collection_Has (CID,VID) VALUES ({cid},{vid});"
+    sql2=f"SELECT * FROM video_game WHERE VID = {vid};"
+
+    curs.execute(sql)
+    curs.execute(sql2)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+
+@app.route("/api/collection/<cid>/<vid>",methods=['DELETE'])
+@cross_origin(origins="*")
+def delete_videogame_from_collection(cid,vid):
+    sql=f"DELETE FROM Collection_Has WHERE CID = {cid} and VID = {vid};"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return{},200
+
+
+@app.route("/api/collection/<cid>", methods=['DELETE'])
+@cross_origin(origins="*")  # URL can be accessed from anywhere(?)
+def delete_collection_by_id(cid):
+    sql = f"DELETE FROM collection WHERE cid={cid};"  # SQL DML statement to remove a given collection.
+
+    curs.execute(sql)  # Execute sql statement
+    conn.commit()  # Commit database change.
+
+    return {}, 200
+
+
+@app.route("/api/collection/<cid>", methods=['PUT'])
+@cross_origin(origins="*")
+def change_collection_title_by_id(cid):
+    data = request.get_json(force=True)
+
+    title = data['title']
+    sql = f"UPDATE collection SET cname='{title}' WHERE cid={cid};"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return title
+
+#
+# VIDEO GAME ROUTES
+#
 @app.route("/api/videogame/", methods=['GET'])
 @cross_origin(origins="*")
 def get_random_videogame():
@@ -304,30 +362,6 @@ def get_random_videogame():
     return gamedict
 
 
-@app.route("/api/collection/<cid>/<vid>",methods=['POST'])
-@cross_origin(origins="*")
-def insert_videogame_into_collection(cid,vid):
-    sql=f"INSERTINTOCollection_Has(CID,VID)VALUES({cid},{vid});"
-    sql2=f"SELECT*FROMvideo_gameWHEREVID={vid};"
-
-    curs.execute(sql)
-    curs.execute(sql2)
-    result=curs.fetchall()
-    conn.commit()
-
-    return result
-
-
-@app.route("/api/collection/<cid>/<vid>",methods=['DELETE'])
-@cross_origin(origins="*")
-def delete_videogame_from_collection(cid,vid):
-    sql=f"DELETEFROMCollection_HasWHERECID={cid}andVID={vid};"
-
-    curs.execute(sql)
-    conn.commit()
-
-    return{},200
-
 
 @app.route("/api/videogame/<vid>", methods=['GET'])
 @cross_origin(origins="*")
@@ -398,6 +432,9 @@ def get_videogame_by_id(vid):
 
     return gamedict
 
+#
+# USER ROUTES
+#
 @app.route("/api/friends", methods=['GET'])
 @cross_origin(origins="*")
 def get_friends():
@@ -419,30 +456,6 @@ def get_friends():
 
     return final_result
 
-
-@app.route("/api/collection/<cid>", methods=['PUT'])
-@cross_origin(origins="*")
-def change_collection_title_by_id(cid):
-    data = request.get_json(force=True)
-
-    title = data['title']
-    sql = f"UPDATE collection SET cname='{title}' WHERE cid={cid};"
-
-    curs.execute(sql)
-    conn.commit()
-
-    return title
-
-
-@app.route("/api/collection/<cid>", methods=['DELETE'])
-@cross_origin(origins="*")  # URL can be accessed from anywhere(?)
-def delete_collection_by_id(cid):
-    sql = f"DELETE FROM collection WHERE cid={cid};"  # SQL DML statement to remove a given collection.
-
-    curs.execute(sql)  # Execute sql statement
-    conn.commit()  # Commit database change.
-
-    return {}, 200
 
 
 # STATE:
