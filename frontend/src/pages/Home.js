@@ -1,42 +1,18 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
-  const [data, setData] = useState([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:5050/message", {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
-    }).then(res => {
-      console.log(res);
-      return res.json();
-    }).then(data => {
-        setData(data);
-    })
+    //grab all of the users collections and display the first one if there is one, if not then do not redirect
+    navigate("/collection/0");
   }, [])
 
-  const deleteElement = (id) => {
-    const copy = [...data]
-    const result = copy.filter(collection => collection[0] !== id);
-    setData(result);
-
-    fetch(`http://localhost:5050/api/collection/${id}`, {
-      method: 'DELETE',
-    })
-  }
-
   return (
-    <div id='collections-container'>
-      {data.length > 0 && data.map(collection => {
-        return(
-          <div key={collection[0]} className="collection">
-            <p>{collection[0]} {collection[1]}</p>
-            <button id="delete" onClick={() => deleteElement(collection[0])}>Delete</button>
-          </div>
-        )
-      })}
+    <div id='collections-container'className='container'>
+      <h1>Make a collection to get started!</h1>
     </div>
   );
 }
