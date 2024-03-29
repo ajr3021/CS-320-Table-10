@@ -138,21 +138,23 @@ def get_random_videogame():
     title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
     curs.execute(title_sql)
     title = curs.fetchall()
-    gamedict["title"] = title
+    gamedict["title"] = title[0][0]
 
     esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
     curs.execute(esrb_sql)
     esrb = curs.fetchall()
-    gamedict["esrb_rating"] = esrb
+    gamedict["esrb_rating"] = esrb[0][0]
 
     rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
     curs.execute(rating_sql)
     rating = curs.fetchall()
-    gamedict["rating"] = rating
+    gamedict["rating"] = rating[0][0]
 
-    gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid};"
+    gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
     curs.execute(gameplay_sql)
     gameplay = curs.fetchall()
+    if gameplay == []:
+        gameplay = 0
     gamedict["gameplay"] = gameplay
 
     # get genres for the game
@@ -173,7 +175,7 @@ def get_random_videogame():
         newdict["platform"] = item[0]
         newdict["price"] = item[1]
         temp2.append(newdict)
-    gamedict["platforms"] = temp2
+    gamedict["platforms"] = temp2[0]
     # get the developers of the game
     developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
     curs.execute(developer_sql)
