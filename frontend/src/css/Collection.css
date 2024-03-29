@@ -2,6 +2,8 @@
     height: 10vh;
     align-items: center;
     display: flex;
+    margin-bottom: 10px;
+    margin-top: 5px;
 }
 
 .banner h1 {
@@ -39,7 +41,7 @@
     flex-direction: column;
 }
 
-.gameCard:hover {
+.gameCard h1:hover {
     cursor: pointer;
 }
 

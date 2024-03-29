@@ -1,12 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 
-const VideoGamePreview = ({games = []}) => {
+const VideoGamePreview = ({games = [], deleteGame=(id) => {}}) => {
 
   const navigate = useNavigate();
-
-  const deleteGame = (id) => {
-    
-  }
 
   const redirectToGame = (vid) => {
     navigate("/videogame/" + vid);
@@ -24,14 +20,14 @@ const VideoGamePreview = ({games = []}) => {
     return (
       games.map(game => {
         return(
-            <div key={game.vid} className='gameCard' onClick={() => redirectToGame(game.vid)}>
+            <div key={game.vid} className='gameCard'>
                 <div className='game-banner'>
                     <img src={game.banner} />
                 </div>
                 <div className="gameCard-info">
                     <div>
                         <div className="top">
-                            <h1>{game.title}</h1>
+                            <h1 onClick={() => redirectToGame(game.vid)}>{game.title}</h1>
                             <small>ESRB Rating: {game.esrb_rating}</small>
                         </div>
                         <div className="middle">
