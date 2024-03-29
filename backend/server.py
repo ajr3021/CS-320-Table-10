@@ -339,7 +339,7 @@ def follow_user(uid):
 @app.route("/api/user/follow/<uid>", methods=['DELETE'])
 @cross_origin(origins="*")
 def unfollow_user(uid):
-    sql = f"DELETE FROM friends WHERE fid={LOGGED_IN_USER_ID} AND uid={uid};"
+    sql = f"DELETE FROM friends WHERE uid={LOGGED_IN_USER_ID} AND fid={uid};"
     curs.execute(sql)   #Execute sql statement
     conn.commit()
     print("unfollowUser Called")
