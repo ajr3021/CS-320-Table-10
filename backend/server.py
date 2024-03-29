@@ -36,6 +36,9 @@ conn = psycopg2.connect(**params)
 curs = conn.cursor()
 print("Database connection established")
 
+
+
+
 #index route
 @app.route("/message")
 @cross_origin(origins="*")
@@ -122,6 +125,30 @@ def get_collection_by_user(uid):
 
     return result
 
+
+@app.route("/api/videogame/", methods=['GET'])
+@cross_origin(origins="*")
+def get_random_videogame():
+    sql = f"SELECT * FROM video_game ORDER BY RANDOM() LIMIT 1;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+
+@app.route("/api/friends/<uid>", methods=['GET'])
+@cross_origin(origins="*")
+def get_friends(uid):
+    sql = f"SELECT * FROM friends WHERE UID = {uid};"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
 @app.route("/api/collection/<cid>", methods=['PUT'])
 @cross_origin(origins="*")
 def change_collection_title_by_id(cid):
@@ -133,10 +160,36 @@ def change_collection_title_by_id(cid):
 
     return title
 
+
 @app.route("/api/collection/<cid>", methods=['DELETE'])
 @cross_origin(origins="*")
 def delete_collection_by_id(cid):
     sql = f"DELETE FROM collection WHERE cid={cid};"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return {}, 200
+
+
+@app.route("/api/collection/<cid>/<vid>", methods=['POST'])
+@cross_origin(origins="*")
+def insert_videogame_into_collection(cid, vid):
+    sql = f"INSERT INTO Collection_Has (CID, VID) VALUES ({cid}, {vid});"
+    sql2 = f"SELECT * FROM video_game WHERE VID = {vid};"
+
+    curs.execute(sql)
+    curs.execute(sql2)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+
+@app.route("/api/collection/<cid>/<vid>", methods=['DELETE'])
+@cross_origin(origins="*")
+def delete_videogame_from_collection(cid, vid):
+    sql = f"DELETE FROM Collection_Has WHERE CID = {cid} and VID = {vid};"
 
     curs.execute(sql)
     conn.commit()
