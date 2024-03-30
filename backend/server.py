@@ -135,7 +135,6 @@ def login():
 
 #
 # COLLECTION ROUTES
-# missing /collection (POST)
 #
 
 @app.route("/api/collection", methods=['POST'])
@@ -485,73 +484,6 @@ def get_videogame_by_id(vid):
 
     return gamedict
 
-#
-# USER ROUTES
-#
-@app.route("/api/friends", methods=['GET'])
-@cross_origin(origins="*")
-def get_friends():
-    sql = f"SELECT username, email FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
-
-    curs.execute(sql)
-    result = curs.fetchall()
-    conn.commit()
-
-    print(result)
-
-    final_result = []
-
-    for i in range(len(result)):
-        final_result.append({
-            "username": result[i][0],
-            "email": result[i][1]
-        })
-
-    return final_result
-
-
-
-# STATE:
-# Backend urls respond properly
-# SQL statements should work in theory, tested them on a database simulation.
-# Tested the one statement that I wasn't sure about working.
-
-@app.route("/api/user/follow/<uid>", methods=['POST'])
-@cross_origin(origins="*")
-def follow_user(uid):
-    sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
-    curs.execute(sql)   #Execute sql statement
-    conn.commit()   #Commits change.
-    #Returns tuple of empty array, status number.
-    return {}, 200
-
-@app.route("/api/videogame/<vid>", methods=['GET'])
-@cross_origin(origins="*")
-def getGame(vid):
-    sql = "SELECT * FROM video_game WHERE vid=%s;"
-
-    curs.execute(sql, (vid,))
-    result = curs.fetchall()#This should always be of size one. Otherwise database has an issue.
-    conn.commit()
-
-    return result, 200
-#Use route parameters. Why not? May change in the future.
-#THIS WORKS!!
-@app.route("/api/videogame/<vid>", methods=['POST'])
-@cross_origin(origins="*")
-def makeGame(vid):
-    vid = str(vid)
-    title = str(request.args.get("title"))#Get all external data from parameters.
-    esrb = str(request.args.get("esrb_rating"))
-    image = str(request.args.get("image"))
-    desc = str(request.args.get("description"))
-    #Works
-    sql = "INSERT INTO video_game(vid, esrb_rating, title, image, description) VALUES (%s, %s, %s, %s, %s);"
-    #Function below works. vid gets converted.
-    curs.execute(sql, (vid, esrb, title, image, desc))
-    conn.commit()
-
-    return {}, 200
 
 #Formatted Data: '23:19'
 #THIS WORKS!!
@@ -576,6 +508,38 @@ def addPlaytime(uid, vid):
     conn.commit()
     return {}, 200
 
+
+@app.route("/api/videogame/<vid>", methods=['GET'])
+@cross_origin(origins="*")
+def getGame(vid):
+    sql = "SELECT * FROM video_game WHERE vid=%s;"
+
+    curs.execute(sql, (vid,))
+    result = curs.fetchall() #This should always be of size one. Otherwise database has an issue.
+    conn.commit()
+
+    return result, 200
+
+
+#Use route parameters. Why not? May change in the future.
+#THIS WORKS!!
+@app.route("/api/videogame/<vid>", methods=['POST'])
+@cross_origin(origins="*")
+def makeGame(vid):
+    vid = str(vid)
+    title = str(request.args.get("title"))#Get all external data from parameters.
+    esrb = str(request.args.get("esrb_rating"))
+    image = str(request.args.get("image"))
+    desc = str(request.args.get("description"))
+    #Works
+    sql = "INSERT INTO video_game(vid, esrb_rating, title, image, description) VALUES (%s, %s, %s, %s, %s);"
+    #Function below works. vid gets converted.
+    curs.execute(sql, (vid, esrb, title, image, desc))
+    conn.commit()
+
+    return {}, 200
+
+
 #WIP function. Comment out if needed.
 #seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
 #sortBy:Ascending or descending
@@ -595,9 +559,9 @@ def searchAndSortGames(uid, searchBy, data):
     elif searchBy == "developer":
         subQuery = f"vg.vid IN (SELECT development.vid FROM (development INNER JOIN studio ON development.sid = studio.sid) WHERE studio.sname = \'{data}%\')"
     elif searchBy == "price":
-        subQuery =  f"{searchBy}={data}"
+        subQuery = f"{searchBy}={data}"
     elif searchBy == "genre":
-        subQuery =  f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
+        subQuery = f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
     else:
         return {}, 400
     mainQuery = f"SELECT DISTINCT vg.vid as vid, vg.title as title, gp.release_date as rDate FROM (video_game vg INNER JOIN game_platform gp ON vg.vid = gp.vid) WHERE " + subQuery + " ORDER BY vg.title, gp.release_date;"
@@ -672,6 +636,47 @@ def searchAndSortGames(uid, searchBy, data):
     #List of dictionaries of:
         #(name, [platforms], [developers], publisher, user's playtime, esrb rating, user average rating.)
     return games_results, 200
+
+
+#
+# USER ROUTES
+#
+@app.route("/api/friends", methods=['GET'])
+@cross_origin(origins="*")
+def get_friends():
+    sql = f"SELECT username, email FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    print(result)
+
+    final_result = []
+
+    for i in range(len(result)):
+        final_result.append({
+            "username": result[i][0],
+            "email": result[i][1]
+        })
+
+    return final_result
+
+
+# STATE:
+# Backend urls respond properly
+# SQL statements should work in theory, tested them on a database simulation.
+# Tested the one statement that I wasn't sure about working.
+
+@app.route("/api/user/follow/<uid>", methods=['POST'])
+@cross_origin(origins="*")
+def follow_user(uid):
+    sql = f"INSERT INTO friends(uid, fid) VALUES ({LOGGED_IN_USER_ID}, {uid});"
+    curs.execute(sql)   #Execute sql statement
+    conn.commit()   #Commits change.
+    #Returns tuple of empty array, status number.
+    return {}, 200
+
 
 
 @app.route("/api/user/follow/<uid>", methods=['DELETE'])
