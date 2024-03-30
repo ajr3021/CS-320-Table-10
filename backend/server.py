@@ -589,9 +589,6 @@ def searchAndSortGames(uid, searchBy, data):
     #assume the data is correct.
 
     #Prevent unwanted sql statements.
-    if sortBy != "DESC" and sortBy != "ASC":
-        return {}, 400
-    subQuery
     if searchBy == "title":
         subQuery = f"{searchBy}=\'{data}%\'"
     elif searchBy == "pname":
@@ -607,11 +604,12 @@ def searchAndSortGames(uid, searchBy, data):
     mainQuery = f"SELECT DISTINCT vg.vid as vid, vg.title as title, gp.release_date as rDate FROM (video_game vg INNER JOIN game_platform gp ON vg.vid = gp.vid) WHERE " + subQuery + " ORDER BY vg.title, gp.release_date;"
     #Get all the vids that fulfill the sort and search requirements
     games_results = []
-    curs.execute(sql)
+    curs.execute(mainQuery)
     conn.commit()
     game_list = curs.fetchall()#This should fetch tuples of title and vid
     for gameId in game_list:
-
+        print(str(gameId[0]))
+        print(type(str(gameId[0])))
         game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_name_sql)
         conn.commit()
@@ -623,18 +621,21 @@ def searchAndSortGames(uid, searchBy, data):
         user_avg_rating = curs.fetchone()
 
 
-        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={gameId[0]};"
         curs.execute(developer_list_sql)
         conn.commit()
-        developer_list = curs.fetchall()
+        developer_list_raw = curs.fetchall()
+        developer_list = []
+        for tup in developer_list_raw:
+            developer_list.append(tup[0])
 
-
-        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={gameId[0]};"
         curs.execute(publisher_list_sql)
         conn.commit()
-        publisher_list = curs.fetchall()
-
-
+        publisher_list_raw = curs.fetchall()
+        publisher_list = []
+        for tup in publisher_list_raw:
+            publisher_list.append(tup[0])
         #Get esrb rating
         game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_esrb_rating_sql)
@@ -652,8 +653,10 @@ def searchAndSortGames(uid, searchBy, data):
         platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
         curs.execute(platform_list_sql)
         conn.commit()
-        platform_list = curs.fetchall()
-
+        platform_list_raw = curs.fetchall()
+        platform_list = []
+        for tup in platform_list_raw:
+            platform_list.append(tup[0])
 
         game_dict = {
             "title": game_name[0],
@@ -662,7 +665,7 @@ def searchAndSortGames(uid, searchBy, data):
             "publishers": publisher_list,
             "playerTime": user_playtime,
             "esrb_rating": game_esrb_rating[0],
-            "userRating": user_average_rating[0]
+            "userRating": user_avg_rating[0]
         }
 
         games_results.append(game_dict)
