@@ -135,7 +135,6 @@ def login():
 
 #
 # COLLECTION ROUTES
-# missing /collection (POST)
 #
 
 @app.route("/api/collection", methods=['POST'])
@@ -599,9 +598,9 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
     elif searchBy == "developer":
         subQuery = f"vg.vid IN (SELECT development.vid FROM (development INNER JOIN studio ON development.sid = studio.sid) WHERE studio.sname = \'{data}%\')"
     elif searchBy == "price":
-        subQuery =  f"{searchBy}={data}"
+        subQuery = f"{searchBy}={data}"
     elif searchBy == "genre":
-        subQuery =  f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
+        subQuery = f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
     else:
         return {}, 400
     mainQuery = f"SELECT DISTINCT vg.vid as vid, vg.title as title, gp.release_date as rDate FROM (video_game vg INNER JOIN game_platform gp ON vg.vid = gp.vid) WHERE " + subQuery + " ORDER BY vg.title, gp.release_date;"
