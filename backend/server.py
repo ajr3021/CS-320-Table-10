@@ -131,30 +131,27 @@ def login():
 @app.route("/api/collection", methods=['POST'])
 @cross_origin(origins="*")
 def create_empty_collection():
-    sql = f"SELECT cid FROM collection;"
+    sql = "SELECT COUNT(*) from player"
+
     curs.execute(sql)
-    result = curs.fetchall()
-
-    taken_id = list()
-    for i in range(len(result)):
-        taken_id.append(result[0][i])
-    cid = taken_id[-1] + 1
-    run = True
-    while run:
-        if cid in taken_id:
-            cid += 1
-        else:
-            run = False
-
-    sql2=f"INSERT INTO Collection (CID,CName) VALUES ({cid}, name);"
-    sql3=f"SELECT * FROM Colleciton WHERE CID = {cid};"
-
-    curs.execute(sql2)
-    curs.execute(sql3)
     result = curs.fetchall()
     conn.commit()
 
-    return result
+    sql2 = f"SELECT cid FROM collection;"
+    curs.execute(sql2)
+    result = curs.fetchall()
+    conn.commit()
+
+    taken_id = set(integer for tpl in result for integer in tpl)
+    cid = 1
+    while cid in taken_id:
+        cid += 1
+    sql3 = f"INSERT INTO Collection (CID,CName) VALUES ({cid}, 'name');"
+
+    curs.execute(sql3)
+    conn.commit()
+
+    return {}, 200
 
 
 @app.route("/api/collection/<cid>", methods=['GET'])  # By default only GET requests are handled.
