@@ -131,27 +131,29 @@ def login():
 @app.route("/api/collection", methods=['POST'])
 @cross_origin(origins="*")
 def create_empty_collection():
-    sql = "SELECT COUNT(*) from player"
+    sql = "SELECT COUNT(*) from collection"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    result = curs.fetchall() 
     conn.commit()
 
-    sql2 = f"SELECT cid FROM collection;"
-    curs.execute(sql2)
-    result = curs.fetchall()
+    cid = int(result[0][0]) * 100 + 1
+
+    data = request.get_json(force=True)
+
+    name = data['name']
+
+    sql = f"INSERT INTO collection (cid, cname) VALUES('{cid}','{name}');"
+
+    curs.execute(sql)
     conn.commit()
 
-    taken_id = set(integer for tpl in result for integer in tpl)
-    cid = 1
-    while cid in taken_id:
-        cid += 1
-    sql3 = f"INSERT INTO Collection (CID,CName) VALUES ({cid}, 'name');"
+    sql = f"INSERT INTO collections_made (cid, uid) VALUES('{cid}','{LOGGED_IN_USER_ID}');"
 
-    curs.execute(sql3)
+    curs.execute(sql)
     conn.commit()
 
-    return {}, 200
+    return {"cid": cid}, 200
 
 
 @app.route("/api/collection/<cid>", methods=['GET'])  # By default only GET requests are handled.
@@ -219,10 +221,13 @@ def get_collection_by_id(cid):
         gamedict["developers"] = temp2
         gamelist.append(gamedict)
 
-    result3 = {
-        "name": collection_name[0][0],
-        "games": gamelist
-    }
+    try:
+        result3 = {
+            "name": collection_name[0][0],
+            "games": gamelist
+        }
+    except:
+        return {}, 200
     return result3
 
 
@@ -234,20 +239,27 @@ def get_collection_by_user(uid):
     sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid={uid} GROUP BY collection.cid;"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        result = []
     conn.commit()
 
     print(result)
 
     final_result = []
 
-    for i in range(len(result)):
-        final_result.append({
-            "cid": result[i][0],
-            "name": result[i][1],
-            "numGames": result[i][2],
-            "totalTimePlayed": result[i][3]
-        })
+    try:
+
+        for i in range(len(result)):
+            final_result.append({
+                "cid": result[i][0],
+                "name": result[i][1],
+                "numGames": result[i][2],
+                "totalTimePlayed": result[i][3]
+            })
+    except:
+        pass
 
     print(final_result)
 
@@ -417,27 +429,36 @@ def get_videogame_by_id(vid):
     title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
     curs.execute(title_sql)
     title = curs.fetchall()
-    gamedict["title"] = title[0][0]
+    if title is not None:
+        gamedict["title"] = title[0][0]
 
     description_sql = f"SELECT description FROM video_game WHERE vid = {vid};"
     curs.execute(description_sql)
     description = curs.fetchall()
-    gamedict["description"] = description[0][0]
+    if description is not None:
+        gamedict["description"] = description[0][0]
 
     image_sql = f"SELECT image FROM video_game WHERE vid = {vid};"
     curs.execute(image_sql)
     image = curs.fetchall()
-    gamedict["banner"] = image[0][0]
+    if image is not None:
+        gamedict["banner"] = image[0][0]
 
     esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
     curs.execute(esrb_sql)
     esrb = curs.fetchall()
-    gamedict["esrb_rating"] = esrb[0][0]
+    if esrb is not None:
+        gamedict["esrb_rating"] = esrb[0][0]
 
-    rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
+    rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE vid = {vid};"
     curs.execute(rating_sql)
     rating = curs.fetchall()
-    gamedict["rating"] = int(rating[0][0])
+
+    gamedict["rating"] = 0
+
+    print(rating)
+    if rating is not None and rating[0][0] is not None:
+        gamedict["rating"] = int(rating[0][0])
 
     gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
     curs.execute(gameplay_sql)
@@ -482,7 +503,7 @@ def get_videogame_by_id(vid):
 @app.route("/api/friends", methods=['GET'])
 @cross_origin(origins="*")
 def get_friends():
-    sql = f"SELECT username, email FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
+    sql = f"SELECT username, email, player.uid FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
 
     curs.execute(sql)
     result = curs.fetchall()
@@ -495,7 +516,8 @@ def get_friends():
     for i in range(len(result)):
         final_result.append({
             "username": result[i][0],
-            "email": result[i][1]
+            "email": result[i][1],
+            "uid": result[i][2]
         })
 
     return final_result
@@ -523,7 +545,6 @@ def unfollow_user(uid):
     sql = f"DELETE FROM friends WHERE uid={LOGGED_IN_USER_ID} AND fid={uid};"
     curs.execute(sql)  # Execute sql statement
     conn.commit()
-    print("unfollowUser Called")
     # Return tuple of list of users, status number.
     return {}, 200
 
@@ -531,25 +552,147 @@ def unfollow_user(uid):
 #Use path parameters.
 #email: Email fragment to search by
 #uid:User ID. Ignored
-@app.route("/api/user/follow/<uid>")#Only responds to GET
+@app.route("/api/user/follow/<email>")#Only responds to GET
 @cross_origin(origins="*")
-def findByEmail(uid):
+def findByEmail(email):
     #Get all users with an email containing some substring and is not already someone the user follows.
     #UI shouldn't allow user to follow themselves.
         #Get names where...
             #Get name from users where email fragment matches
             #the uid of the name of the person is not already followed by the user
-    data = request.get_json(force=True)
-    email = str(data["email"])
     #Statement
-    sql = f"SELECT x.username, x.uid FROM (SELECT username, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN (SELECT uid FROM friends WHERE fid = {uid}) ) as x WHERE uid != {uid};"
+    sql = f"SELECT x.username, x.email, x.uid FROM (SELECT username, email, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN (SELECT uid FROM friends WHERE fid = {LOGGED_IN_USER_ID}) ) as x WHERE uid != {LOGGED_IN_USER_ID};"
 
     curs.execute(sql)   #Execute sql statement
     result = curs.fetchall()
     conn.commit() #Should probably be changed given problem with database transaction
+
+    final_result = []
+
+    for i in range(len(result)):
+        final_result.append({
+            "username": result[i][0],
+            "email": result[i][1],
+            "uid": result[i][2]
+        })
+
     #Return tuple of list of users, status.
     #print("FindbyEmail Called")#Pass as form data
-    return result, 200
+    return final_result
+
+
+#WIP function. Comment out if needed.
+#seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
+#sortBy:Ascending or descending
+#data:The data to look at
+#Row:video game’s name, platforms, the developers, the publisher, the playtime (of user) and the esrb and aggregate user ratings.
+#Not properly tested
+@app.route("/api/videogame/<uid>/<searchBy>/<data>", methods=['GET'])
+@cross_origin(origins="*")
+def searchAndSortGames(uid, searchBy, data):
+    #assume the data is correct.
+
+    #Prevent unwanted sql statements.
+    if searchBy == "title":
+        subQuery = f"{searchBy}=\'{data}%\'"
+    elif searchBy == "pname":
+        subQuery = f"gp.pid IN (SELECT platform.pid FROM (game_platform INNER JOIN platform ON platform.pid = game_platform.pid) WHERE pname = \'{data}%\')"
+    elif searchBy == "developer":
+        subQuery = f"vg.vid IN (SELECT development.vid FROM (development INNER JOIN studio ON development.sid = studio.sid) WHERE studio.sname = \'{data}%\')"
+    elif searchBy == "price":
+        subQuery =  f"{searchBy}={data}"
+    elif searchBy == "genre":
+        subQuery =  f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
+    else:
+        return {}, 400
+    mainQuery = f"SELECT DISTINCT vg.vid as vid, vg.title as title, gp.release_date as rDate FROM (video_game vg INNER JOIN game_platform gp ON vg.vid = gp.vid) WHERE " + subQuery + " ORDER BY vg.title, gp.release_date;"
+    #Get all the vids that fulfill the sort and search requirements
+    games_results = []
+    curs.execute(mainQuery)
+    conn.commit()
+    game_list = curs.fetchall()#This should fetch tuples of title and vid
+    for gameId in game_list:
+        print(str(gameId[0]))
+        print(type(str(gameId[0])))
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_name_sql)
+        conn.commit()
+        game_name = curs.fetchone()
+
+        game_desc_sql = f"SELECT description FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_desc_sql)
+        conn.commit()
+        game_desc = curs.fetchone()
+
+        game_image_sql = f"SELECT image FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_image_sql)
+        conn.commit()
+        game_image = curs.fetchone()
+
+        price = 40
+
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
+        curs.execute(user_avg_rating_sql)
+        conn.commit()
+        user_avg_rating = curs.fetchone()
+
+
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={gameId[0]};"
+        curs.execute(developer_list_sql)
+        conn.commit()
+        developer_list_raw = curs.fetchall()
+        developer_list = []
+        for tup in developer_list_raw:
+            developer_list.append(tup[0])
+
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={gameId[0]};"
+        curs.execute(publisher_list_sql)
+        conn.commit()
+        publisher_list_raw = curs.fetchall()
+        publisher_list = []
+        for tup in publisher_list_raw:
+            publisher_list.append(tup[0])
+        #Get esrb rating
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
+        curs.execute(game_esrb_rating_sql)
+        conn.commit()
+        game_esrb_rating = curs.fetchone()
+
+
+        #Get playtime
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]} AND uid={LOGGED_IN_USER_ID};"
+        curs.execute(user_playtime_sql)
+        conn.commit()
+        user_playtime = curs.fetchall()
+
+
+        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
+        curs.execute(platform_list_sql)
+        conn.commit()
+        platform_list_raw = curs.fetchall()
+        platform_list = []
+        for tup in platform_list_raw:
+            platform_list.append(tup[0])
+
+        game_dict = {
+            "vid": str(gameId[0]),
+            "name": game_name[0],
+            "description": game_desc[0],
+            "price": price,
+            "banner": game_image[0],
+            "platforms": platform_list,
+            "developers": developer_list,
+            "publishers": publisher_list,
+            "gameplay": user_playtime,
+            "esrb_rating": game_esrb_rating[0],
+            "rating": user_avg_rating[0]
+        }
+
+        games_results.append(game_dict)
+
+    #List of dictionaries of:
+        #(name, [platforms], [developers], publisher, user's playtime, esrb rating, user average rating.)
+    return games_results, 200
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)

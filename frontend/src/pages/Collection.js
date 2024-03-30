@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import '../css/Collection.css'
 import VideoGamePreview from "../components/VideoGamePreview";
@@ -11,6 +11,8 @@ const Collection = () => {
     const [showForm, setShowForm] = useState(false);
 
     const [editName, setEditName] = useState("");
+
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -75,6 +77,8 @@ const Collection = () => {
       fetch(`http://localhost:5050/api/collection/${collectionId}`, {
         method: 'DELETE',
       })
+
+      navigate("/")
     }
 
     const displayForm = () => {
@@ -106,6 +110,10 @@ const Collection = () => {
       setData({
         "name": data.name,
         "games": results
+      })
+
+      fetch(`http://localhost:5050/api/collection/${collectionId}/${vid}`, {
+        method: 'DELETE',
       })
     }
 

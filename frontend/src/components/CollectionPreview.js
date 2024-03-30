@@ -42,24 +42,43 @@ const CollectionPreview = ({selected}) => {
 
   const redirectToCollection = (cid) => {
     navigate("/collection/" + cid);
+    window.location.reload();
   } 
 
   const createCollection = (e) => {
     e.preventDefault();
 
     if(e.target.form[0].value.length !== 0){
-      const result = {
-        "cid": data.length,
+      setName("");
+
+      const payload = {
         "name": e.target.form[0].value,
-        "numGames": 0,
-        "totalTimePlayed": "0:00"
       }
 
-      // when there is the backend, send the request and record the response
+      const res = JSON.stringify(payload);
 
-      setData([...data, result]);
+      fetch(`http://localhost:5050/api/collection`, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
 
-      setName("");
+        method: 'POST',
+        body: res
+      }).then(res => {
+          return res.json()
+      }).then(js => {
+        const result = {
+          "cid": js.cid,
+          "name": e.target.form[0].value,
+          "numGames": 0,
+          "totalTimePlayed": "0:00"
+        }
+  
+        // when there is the backend, send the request and record the response
+  
+        setData([...data, result]);
+      })
     }
   }
 

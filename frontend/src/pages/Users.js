@@ -6,53 +6,6 @@ const Users = () => {
     const [friends, setFriends] = useState([]);
 
     useEffect(() => {
-        setUsers([
-            {
-                "username": "john",
-                "email": "john@gmail.com",
-            },
-            {
-                "username": "jane",
-                "email": "jane@gmail.com",
-            },
-            {
-                "username": "jack",
-                "email": "jack@gmail.com",
-            },
-            {
-                "username": "james",
-                "email": "james@gmail.com",
-            },
-            {
-                "username": "jeff",
-                "email": "jeff@gmail.com",
-            },
-        ])
-    }, [])
-
-    useEffect(() => {
-        setFriends([
-        {
-            "username": "john",
-            "email": "john@gmail.com",
-        },
-        {
-            "username": "jane",
-            "email": "jane@gmail.com",
-        },
-        {
-            "username": "jack",
-            "email": "jack@gmail.com",
-        },
-        {
-            "username": "james",
-            "email": "james@gmail.com",
-        },
-        {
-            "username": "jeff",
-            "email": "jeff@gmail.com",
-        },
-
         fetch(`http://localhost:5050/api/friends`, {
           headers: {
               'Accept': 'application/json',
@@ -66,16 +19,16 @@ const Users = () => {
             setFriends(data);
             console.log(data)
         })
-    ])}, []);
+    }, []);
 
     const displayUsers = () => {
         return(
             users.map((user) =>  {
                 return(
-                    <tr>
+                    <tr key={user.uid}>
                         <td>{user.username}</td>
                         <td>{user.email}</td>
-                        <td><button className='btn-primary' onClick={() => follow(user.username)}>Follow</button></td>
+                        <td><button className='btn-primary' onClick={() => follow(user.uid)}>Follow</button></td>
                     </tr>
                 )
             })
@@ -86,10 +39,10 @@ const Users = () => {
         return(
             friends.map((user) =>  {
                 return(
-                    <tr>
+                    <tr key={user.uid}>
                         <td>{user.username}</td>
                         <td>{user.email}</td>
-                        <td><button className='btn-primary' onClick={() => unfollow(user.username)}>Unfollow</button></td>
+                        <td><button className='btn-primary' onClick={() => unfollow(user.uid)}>Unfollow</button></td>
                     </tr>
                 )
             })
@@ -107,21 +60,39 @@ const Users = () => {
         )
     }
 
-    const follow = (username) => {
-        const friend = users.find(user => user.username === username)
+    const follow = (uid) => {
+        const friend = users.find(user => user.uid === uid)
         const newFriends = [...friends, friend]
 
         setFriends(newFriends)
 
+        fetch(`http://localhost:5050/api/user/follow/${uid}`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'POST',
+        })
+
         const copy = [...users]
-        const result = copy.filter(user => user.username !== username);
+        const result = copy.filter(user => user.uid !== uid);
         setUsers(result);
     }
 
-    const unfollow = (username) => {
+    const unfollow = (uid) => {
         const copy = [...friends]
-        const result = copy.filter(user => user.username !== username);
+        const result = copy.filter(user => user.uid !== uid);
         setFriends(result);
+
+        fetch(`http://localhost:5050/api/user/follow/${uid}`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'DELETE',
+        })
     }
 
     const search = (e) => {
@@ -129,8 +100,19 @@ const Users = () => {
         const email = e.target.form[0].value;
 
         // make fetch request
-
-        // update results
+        fetch(`http://localhost:5050/api/user/follow/${email}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+  
+            method: 'GET',
+          }).then(res => {
+              return res.json();
+          }).then(data => {
+              setUsers(data);
+              console.log(data)
+          })
     }
 
     return (

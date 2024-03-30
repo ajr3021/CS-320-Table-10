@@ -77,6 +77,17 @@ const VideoGame = () => {
     const addToCollection = (e) => {
         e.preventDefault();
         console.log(checkedCollectionIds);
+
+        checkedCollectionIds.forEach(id => {
+            fetch(`http://localhost:5050/api/collection/${id}/${videoGameId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+
+                method: 'POST',
+            })
+        })
     }
 
     const updateMap = (id) => {
