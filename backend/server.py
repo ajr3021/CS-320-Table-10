@@ -296,6 +296,19 @@ def get_collection_by_current_user():
 
     return final_result
 
+@app.route("/api/rating/<vid>/<data>", methods=['POST'])
+@cross_origin(origins="*")
+def rate_videogame(vid, data):
+    rating = int(data)
+    sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result
+
+
 
 @app.route("/api/collection/<cid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
