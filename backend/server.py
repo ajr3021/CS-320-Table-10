@@ -80,6 +80,23 @@ def signup():
 
     sql = "SELECT COUNT(*) from player"
 
+    curs.execute(sql)
+    result = curs.fetchall() 
+    conn.commit()
+
+    uid = result[0][0] + 1
+
+    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8') 
+
+    dt = datetime.now(timezone.utc)
+
+    sql = f"INSERT INTO player (uid, username, password, firstname, lastname, lastaccessdate, email, creationdate) VALUES('{uid}','{username}', '{hashed_password}', '{firstname}', '{lastname}', '{dt}', '{email}', '{dt}');"
+
+    curs.execute(sql)
+    conn.commit()
+
+    return result
+
 
 @app.route("/api/login", methods=["POST"])
 @cross_origin(origins="*")
