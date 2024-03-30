@@ -238,10 +238,10 @@ def get_collection_by_id(cid):
 
 # tested ^
 
-@app.route("/api/collection/user/<uid>", methods=['GET'])
+@app.route("/api/collection/user", methods=['GET'])
 @cross_origin(origins="*")
-def get_collection_by_user(uid):
-    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid={uid} GROUP BY collection.cid;"
+def get_collection_by_user():
+    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid={LOGGED_IN_USER_ID} GROUP BY collection.cid ORDER BY cname;"
 
     curs.execute(sql)
     result = curs.fetchall()
@@ -339,10 +339,10 @@ def change_collection_title_by_id(cid):
 # VIDEO GAME ROUTES
 # missing: /videogame/{vid} (POST), /videogame search sort, /videogame/{vid}/play (POST)
 #
-@app.route("/api/videogame/", methods=['GET'])
+@app.route("/api/videogame/<cid>", methods=['GET'])
 @cross_origin(origins="*")
-def get_random_videogame():
-    game_sql = f"SELECT vid FROM video_game ORDER BY RANDOM() LIMIT 1;"
+def get_random_videogame(cid):
+    game_sql = f"SELECT vid FROM collection_has WHERE cid={cid} ORDER BY RANDOM() LIMIT 1;"
     curs.execute(game_sql)
     vid_sql = curs.fetchall()
     vid = vid_sql[0][0]
@@ -408,7 +408,6 @@ def get_random_videogame():
     temp = curs.fetchall()
     temp2 = []
     for item in temp:
-        gamedict["price"] = item[1]
         temp2.append(item[0])
     gamedict["developers"] = temp2
 
