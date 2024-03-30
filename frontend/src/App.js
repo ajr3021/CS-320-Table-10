@@ -6,13 +6,22 @@ import Collection from './pages/Collection';
 import Users from './pages/Users';
 import VideoGame from './pages/VideoGame';
 import Search from './pages/Search';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+      <Route index path='/login' element={<Login />} >
+
+      </Route>
+      <Route index path='/signup' element={<SignUp />} >
+
+      </Route>
         <Route path='/' element={<Layout />}>
-          <Route index element={<Home />}></Route>
+          <Route element={<Home />}></Route>
           <Route path='/collection/:collectionId' element={<Collection />}></Route>
           <Route path='/videoGame/:videoGameId' element={<VideoGame />}></Route>
           <Route path='/users' element={<Users />}></Route>
