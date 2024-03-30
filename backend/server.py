@@ -583,9 +583,9 @@ def addPlaytime(uid, vid):
 #data:The data to look at
 #Row:video game’s name, platforms, the developers, the publisher, the playtime (of user) and the esrb and aggregate user ratings.
 #Not properly tested
-@app.route("/api/videogame/<uid>/<searchBy>/<sortBy>/<data>", methods=['GET'])
+@app.route("/api/videogame/<uid>/<searchBy>/<data>", methods=['GET'])
 @cross_origin(origins="*")
-def searchAndSortGames(uid, searchBy, sortBy, data):
+def searchAndSortGames(uid, searchBy, data):
     #assume the data is correct.
 
     #Prevent unwanted sql statements.
