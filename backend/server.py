@@ -303,10 +303,9 @@ def rate_videogame(vid, data):
     sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})"
 
     curs.execute(sql)
-    result = curs.fetchall()
     conn.commit()
 
-    return result
+    return {}, 200
 
 
 
