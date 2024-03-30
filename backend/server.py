@@ -122,10 +122,8 @@ def login():
         return {}, 200
     return {}, 201
 
-
 #
 # COLLECTION ROUTES
-# missing /collection (POST)
 #
 
 @app.route("/api/collection", methods=['POST'])
@@ -293,12 +291,12 @@ def insert_videogame_into_collection(cid,vid):
 @app.route("/api/collection/<cid>/<vid>",methods=['DELETE'])
 @cross_origin(origins="*")
 def delete_videogame_from_collection(cid,vid):
-    sql=f"DELETE FROM Collection_Has WHERE CID = {cid} and VID = {vid};"
+    sql = f"DELETE FROM Collection_Has WHERE CID = {cid} and VID = {vid};"
 
     curs.execute(sql)
     conn.commit()
 
-    return{},200
+    return{}, 200
 
 
 @app.route("/api/collection/<cid>", methods=['DELETE'])
