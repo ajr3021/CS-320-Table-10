@@ -148,48 +148,59 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
         #development (needed to get all developers of a game)
         #rates (needed to get average of all user ratings)
     #Development and publishing are BOTH going to be arrays. I could get them in a separate sql query and return a new list of resulting tuples(?)
-
-    sql = f"SELECT vid FROM video_game INNER JOIN game_platform ON game_platform.vid = video_game.vid WHERE {searchBy}={data} ORDER BY video_game.title ASC, game_platform.release_date ASC;"
-
+    subQuery
+    if searchBy == "title":
+        subQuery = f"{searchBy}=\'{data}%\'"
+    elif searchBy == "pname":
+        subQuery = f"gp.pid IN (SELECT platform.pid FROM (game_platform INNER JOIN platform ON platform.pid = game_platform.pid) WHERE pname = \'{data}%\')"
+    elif searchBy == "developer":
+        subQuery = f"vg.vid IN (SELECT development.vid FROM (development INNER JOIN studio ON development.sid = studio.sid) WHERE studio.sname = \'{data}%\')"
+    elif searchBy == "price":
+        subQuery =  f"{searchBy}={data}"
+    elif searchBy == "genre":
+        subQuery =  f"vg.vid IN (SELECT vid FROM (has_genre INNER JOIN genre on genre.gid = has_genre.gid) WHERE gname = \'{data}\' )"
+    else:
+        return {}, 400
+    mainQuery = f"SELECT DISTINCT vg.vid as vid, vg.title as title, gp.release_date as rDate FROM (video_game vg INNER JOIN game_platform gp ON vg.vid = gp.vid) WHERE " + subQuery + " ORDER BY vg.title, gp.release_date;"
+    #Get all the vids that fulfill the sort and search requirements
     games_results = []
     curs.execute(sql)
     conn.commit()
-    user_rating_alias = "averageRate"
     game_list = curs.fetchall()#This should fetch tuples of title and vid
     for gameId in game_list:
 
-        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0][0]};"
         curs.execute(game_name_sql)
         conn.commit()
         game_name = curs.fetchone()
 
-        user_avg_rating_sql = f"SELECT AVG(rating) as {user_rating_alias} FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0][0]};"#Get average rating of game.
         curs.execute(user_avg_rating_sql)
         conn.commit()
         user_avg_rating = curs.fetchone()
 
         
-        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0][0]};"
         curs.execute(developer_list_sql)
         conn.commit()
         developer_list = curs.fetchall()
 
 
-        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0][0]};"
         curs.execute(publisher_list_sql)
         conn.commit()
         publisher_list = curs.fetchall()
 
 
         #Get esrb rating
-        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0][0]};"
         curs.execute(game_esrb_rating_sql)
         conn.commit()
         game_esrb_rating = curs.fetchall()
 
 
         #Get playtime
-        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]};" 
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0][0]} AND uid={uid};" 
         curs.execute(user_playtime_sql)
         conn.commit()
         user_playtime = curs.fetchall()
@@ -206,16 +217,13 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
             "platforms": platform_list,
             "developers": developer_list,
             "publishers": publisher_list,
-            "playTime": user_playtime,
-            "esrb_rating": game_esrb_rating,
+            "startTime": user_playtime[0][0],
+            "endTime": user_playtime[0][1]
+            "esrb_rating": game_esrb_rating[0],
             "userRating": user_average_rating[0]
         }
 
         games_results.append(game_dict)
-
-        #Add everything to a dictionary
-            #Deep copy everything.
-        #Push dictionary into games_results.
 
     #List of dictionaries of:
         #(name, [platforms], [developers], publisher, user's playtime, esrb rating, user average rating.)
