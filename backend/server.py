@@ -190,9 +190,15 @@ def get_collection_by_id(cid):
         gamedict["vid"] = int(vid)
         gamedict["name"] = game[1]
         gamedict["esrb_rating"] = game[2]
-        gamedict["rating"] = int(game[3])
+        if game[3] is not None:
+            gamedict["rating"] = int(game[3])
+        else:
+            gamedict["rating"] = 0
 
-        gameplay = game[4]
+        try:
+            gameplay = game[4]
+        except:
+            gameplay = 0
 
         gamedict["description"] = game[5]
         gamedict["banner"] = game[6]
@@ -362,7 +368,7 @@ def change_collection_title_by_id(cid):
 # VIDEO GAME ROUTES
 # missing: /videogame/{vid} (POST), /videogame search sort, /videogame/{vid}/play (POST)
 #
-@app.route("/api/videogame/<cid>", methods=['GET'])
+@app.route("/api/videogame/collection/<cid>", methods=['GET'])
 @cross_origin(origins="*")
 def get_random_videogame(cid):
     game_sql = f"SELECT vid FROM collection_has WHERE cid={cid} ORDER BY RANDOM() LIMIT 1;"
@@ -449,25 +455,26 @@ def get_videogame_by_id(vid):
     title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
     curs.execute(title_sql)
     title = curs.fetchall()
-    if title is not None:
+    print(title)
+    if title is not None and title != []:
         gamedict["title"] = title[0][0]
 
     description_sql = f"SELECT description FROM video_game WHERE vid = {vid};"
     curs.execute(description_sql)
     description = curs.fetchall()
-    if description is not None:
+    if description is not None and description != []:
         gamedict["description"] = description[0][0]
 
     image_sql = f"SELECT image FROM video_game WHERE vid = {vid};"
     curs.execute(image_sql)
     image = curs.fetchall()
-    if image is not None:
+    if image is not None and image != []:
         gamedict["banner"] = image[0][0]
 
     esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
     curs.execute(esrb_sql)
     esrb = curs.fetchall()
-    if esrb is not None:
+    if esrb is not None and esrb != []:
         gamedict["esrb_rating"] = esrb[0][0]
 
     rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE vid = {vid};"

@@ -6,6 +6,7 @@ const VideoGamePreview = ({games = [], deleteGame=(id) => {}}) => {
 
   const redirectToGame = (vid) => {
     navigate("/videogame/" + vid);
+    window.location.reload()
   }
 
   const noGames = () => {

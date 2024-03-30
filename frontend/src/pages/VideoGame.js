@@ -31,7 +31,7 @@ const VideoGame = () => {
     }, [])
 
     useEffect(() => {
-        fetch(`http://localhost:5050/api/collection/user/1`, {
+        fetch(`http://localhost:5050/api/collection/user`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
