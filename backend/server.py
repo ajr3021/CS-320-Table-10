@@ -582,6 +582,7 @@ def addPlaytime(uid, vid):
 #sortBy:Ascending or descending
 #data:The data to look at
 #Row:video game’s name, platforms, the developers, the publisher, the playtime (of user) and the esrb and aggregate user ratings.
+#Not properly tested
 @app.route("/api/videogame/<uid>/<searchBy>/<sortBy>/<data>", methods=['GET'])
 @cross_origin(origins="*")
 def searchAndSortGames(uid, searchBy, sortBy, data):
@@ -590,16 +591,6 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
     #Prevent unwanted sql statements.
     if sortBy != "DESC" and sortBy != "ASC":
         return {}, 400
-
-    #Sort alphabetically and release date-wise ascending
-    #Tables used:
-        #video_game (name, esrb rating)
-        #game_platform (needed to get price, release_date)
-        #Gameplay (for that of user)
-        #publishing (for publishers)
-        #development (needed to get all developers of a game)
-        #rates (needed to get average of all user ratings)
-    #Development and publishing are BOTH going to be arrays. I could get them in a separate sql query and return a new list of resulting tuples(?)
     subQuery
     if searchBy == "title":
         subQuery = f"{searchBy}=\'{data}%\'"
@@ -621,38 +612,38 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
     game_list = curs.fetchall()#This should fetch tuples of title and vid
     for gameId in game_list:
 
-        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0][0]};"
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_name_sql)
         conn.commit()
         game_name = curs.fetchone()
 
-        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0][0]};"#Get average rating of game.
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
         curs.execute(user_avg_rating_sql)
         conn.commit()
         user_avg_rating = curs.fetchone()
 
         
-        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0][0]};"
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
         curs.execute(developer_list_sql)
         conn.commit()
         developer_list = curs.fetchall()
 
 
-        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0][0]};"
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON development.vid = studio.vid WHERE vid={gameId[0]};"
         curs.execute(publisher_list_sql)
         conn.commit()
         publisher_list = curs.fetchall()
 
 
         #Get esrb rating
-        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0][0]};"
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_esrb_rating_sql)
         conn.commit()
-        game_esrb_rating = curs.fetchall()
+        game_esrb_rating = curs.fetchone()
 
 
         #Get playtime
-        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0][0]} AND uid={uid};" 
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]} AND uid={uid};" 
         curs.execute(user_playtime_sql)
         conn.commit()
         user_playtime = curs.fetchall()
@@ -669,8 +660,7 @@ def searchAndSortGames(uid, searchBy, sortBy, data):
             "platforms": platform_list,
             "developers": developer_list,
             "publishers": publisher_list,
-            "startTime": user_playtime[0][0],
-            "endTime": user_playtime[0][1]
+            "playerTime": user_playtime,
             "esrb_rating": game_esrb_rating[0],
             "userRating": user_average_rating[0]
         }
