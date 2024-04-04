@@ -776,5 +776,56 @@ def searchAndSortGames(uid, searchBy, data):
         #(name, [platforms], [developers], publisher, user's playtime, esrb rating, user average rating.)
     return games_results, 200
 
+
+#Test all of the following features.
+
+@app.route("/api/videogame/<uid>/followers", methods = ['GET'])
+@cross_origin(origins="*")
+def getTotalFollowers(uid):#Get all followers of a uid.
+    #Gets the count of the followers of a particular user
+    #fid:uid of the user following someone with a uid
+    #SQL statement works.
+    sql_get_total_followers = "SELECT count(fid) FROM friends WHERE uid = %s"
+    curs.execute(sql_get_total_followers, uid)
+    conn.commit()
+    followersNum = curs.fetchone()#Should just return a tuple
+    followersDict = {
+        "followers" :  followersNum[0]
+    }
+
+    return followersDict, 200
+
+@app.route("/api/videogame/<uid>/following", methods = ['GET'])
+@cross_origin(origins="*")
+def getTotalFollowed(uid):#Get all people a person follows.
+    #fid:uid of the user following someone with a uid
+    #SQL statement works.
+    sql_get_total_followed = "SELECT count(uid) FROM friends WHERE fid = %s"
+    curs.execute(sql_get_total_followed, uid)
+    conn.commit()
+    followedNum = curs.fetchone()#Should just return a tuple
+    followedDict = {
+        "followed" :  followedNum[0]
+    }
+
+    return followedDict, 200
+
+@app.route("/api/videogame/<uid>/collectionNumber", methods = ['GET'])
+@cross_origin(origins="*")
+def getUserCollectionNumber(uid):#Get all people a person follows.
+    #fid:uid of the user following someone with a uid
+    #SQL statement works.
+    sql_get_total_collections = "SELECT count(cid) from collections_made WHERE uid = %s"
+    curs.execute(sql_get_total_collections, uid)
+    conn.commit()
+    collectionNum = curs.fetchone()#Should just return a tuple containing number.
+    followedDict = {
+        "totalCollections" :  collectionNum[0]
+    }
+
+    return followedDict, 200
+
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
