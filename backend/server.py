@@ -826,6 +826,7 @@ def getUserCollectionNumber(uid):#Get all people a person follows.
     return followed_dict, 200
 
 #Do this by ratings
+#Add in price.
 @app.route("/api/videogame/<uid>/topTenGames", methods = ['GET'])
 @cross_origins(origins="*")
 def getUserTopTenGames(uid):
@@ -836,28 +837,28 @@ def getUserTopTenGames(uid):
     vid_rating_data = curs.fetchall()#From the top to the tenth top game.
     for vid_pair in vid_rating_data:
 
-        game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={vid_pair[0]};"
         curs.execute(game_name_sql)
         conn.commit()
         game_name = curs.fetchone()
 
-        game_desc_sql = f"SELECT description FROM video_game WHERE vid={gameId[0]};"
+        game_desc_sql = f"SELECT description FROM video_game WHERE vid={vid_pair[0]};"
         curs.execute(game_desc_sql)
         conn.commit()
         game_desc = curs.fetchone()
 
-        game_image_sql = f"SELECT image FROM video_game WHERE vid={gameId[0]};"
+        game_image_sql = f"SELECT image FROM video_game WHERE vid={vid_pair[0]};"
         curs.execute(game_image_sql)
         conn.commit()
         game_image = curs.fetchone()
 
-        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={vid_pair[0]};"#Get average rating of game.
         curs.execute(user_avg_rating_sql)
         conn.commit()
         user_avg_rating = curs.fetchone()
 
 
-        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={gameId[0]};"
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pairId[0]};"
         curs.execute(developer_list_sql)
         conn.commit()
         developer_list_raw = curs.fetchall()
@@ -865,7 +866,7 @@ def getUserTopTenGames(uid):
         for tup in developer_list_raw:
             developer_list.append(tup[0])
 
-        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={gameId[0]};"
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={vid_pair[0]};"
         curs.execute(publisher_list_sql)
         conn.commit()
         publisher_list_raw = curs.fetchall()
@@ -873,20 +874,20 @@ def getUserTopTenGames(uid):
         for tup in publisher_list_raw:
             publisher_list.append(tup[0])
         #Get esrb rating
-        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={vid_pair[0]};"
         curs.execute(game_esrb_rating_sql)
         conn.commit()
         game_esrb_rating = curs.fetchone()
 
 
         #Get playtime
-        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]} AND uid={LOGGED_IN_USER_ID};"
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={vid_pair[0]} AND uid={LOGGED_IN_USER_ID};"
         curs.execute(user_playtime_sql)
         conn.commit()
         user_playtime = curs.fetchall()
 
 
-        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
+        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
         curs.execute(platform_list_sql)
         conn.commit()
         platform_list_raw = curs.fetchall()
