@@ -825,10 +825,11 @@ def getUserCollectionNumber(uid):#Get all people a person follows.
 
     return followed_dict, 200
 
-#Do this by ratings
+#Currently untested.
+#Do this by ratings.
 #Add in price.
 @app.route("/api/videogame/<uid>/topTenGames", methods = ['GET'])
-@cross_origins(origins="*")
+@cross_origin(origins="*")
 def getUserTopTenGames(uid):
     sql_get_vid_ratings_pair = "SELECT vid, rating FROM rates WHERE uid = %s ORDER BY rating DESC LIMIT 10"
     curs.execute(sql_get_vid_ratings_pair, uid)
@@ -858,7 +859,7 @@ def getUserTopTenGames(uid):
         user_avg_rating = curs.fetchone()
 
 
-        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pairId[0]};"
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pair[0]};"
         curs.execute(developer_list_sql)
         conn.commit()
         developer_list_raw = curs.fetchall()
@@ -887,13 +888,10 @@ def getUserTopTenGames(uid):
         user_playtime = curs.fetchall()
 
 
-        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
-        curs.execute(platform_list_sql)
+        platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
+        curs.execute(platform_and_price_list_sql)
         conn.commit()
-        platform_list_raw = curs.fetchall()
-        platform_list = []
-        for tup in platform_list_raw:
-            platform_list.append(tup[0])
+        platform_and_price_list = curs.fetchall()
 
         top_ten_dict = {
             "vid" : vid_pair[0],
@@ -901,7 +899,7 @@ def getUserTopTenGames(uid):
             "name": game_name[0],
             "description": game_desc[0],
             "banner": game_image[0],
-            "platforms": platform_list,
+            "platforms": platform_and_price_list,
             "developers": developer_list,
             "publishers": publisher_list,
             "gameplay": user_playtime,
@@ -909,7 +907,6 @@ def getUserTopTenGames(uid):
             "rating": user_avg_rating[0]
         }
         top_ten_data.append(top_ten_dict)
-
     return top_ten_data, 200
 
 if __name__ == "__main__":
