@@ -579,6 +579,50 @@ def makeGame(vid):
 
     return {}, 200
 
+
+@app.route("/api/videogame", methods=['GET'])
+@cross_origin(origins="*")
+def get_top_twenty_games():
+    sql = "SELECT VID, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS TotalPlaytime FROM Gameplay " \
+          "WHERE startTime BETWEEN now() - Interval ' 90 Day' and now() GROUP BY VID ORDER BY TotalPlaytime DESC " \
+          "LIMIT 20;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result, 200
+
+
+@app.route("/api/videogame/friends/<uid>", methods=['GET'])
+@cross_origin(origins="*")
+def get_top_twenty_games_from_friends(uid):
+    sql = "SELECT g.VID, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS TotalPlaytime " \
+          f"FROM Gameplay g INNER JOIN Friends f ON g.UID = f.FID " \
+          f"WHERE f.UID = {uid} GROUP BY g.VID ORDER BY TotalPlaytime DESC LIMIT 20;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result, 200
+
+
+@app.route("/api/videogame/rating", methods=['GET'])
+@cross_origin(origins="*")
+def get_top_five_new_released():
+    sql = "SELECT VID, AVG(rating) AS AverageRating FROM Rates " \
+          "WHERE VID IN (" \
+            "SELECT VID FROM Game_Platform " \
+            "WHERE EXTRACT(month FROM release_date) = EXTRACT(MONTH FROM CURRENT_DATE) " \
+            "AND EXTRACT(year FROM release_date) = EXTRACT(year FROM CURRENT_DATE)" \
+          ") GROUP BY VID ORDER BY AverageRating DESC LIMIT 5;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    return result, 200
 #
 # USER ROUTES
 #
