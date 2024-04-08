@@ -663,7 +663,6 @@ def findByEmail(email):
     return final_result
 
 
-#WIP function. Comment out if needed.
 #seachBy:The attribute to seach for: name, platform, release date, developers, price, or genre.
 #sortBy:Ascending or descending
 #data:The data to look at
@@ -825,12 +824,12 @@ def getUserCollectionNumber(uid):#Get all people a person follows.
 
     return followed_dict, 200
 
-#Currently untested.
+#Tested.
 #Do this by ratings.
 #Add in price.
-@app.route("/api/videogame/<uid>/topTenGames", methods = ['GET'])
+@app.route("/api/videogame/<uid>/topTenGamesByRating", methods = ['GET'])
 @cross_origin(origins="*")
-def getUserTopTenGames(uid):
+def getUserTopTenGamesByRating(uid):
     sql_get_vid_ratings_pair = "SELECT vid, rating FROM rates WHERE uid = %s ORDER BY rating DESC LIMIT 10"
     curs.execute(sql_get_vid_ratings_pair, uid)
     conn.commit()
@@ -909,5 +908,90 @@ def getUserTopTenGames(uid):
         top_ten_data.append(top_ten_dict)
     return top_ten_data, 200
 
+#top ten by total time played.
+#Ideal:
+    #Get difference of all date times, convert them into hours, add them up, then sort them.
+@app.route("/api/videogame/<uid>/topTenGamesByTime", methods = ['GET'])
+@cross_origin(origins="*")
+def getUserTopTenGamesByTimePlayed(uid):
+    #This sql statement works.
+        #Gets a pair of the total amount of hours a person played some game (vid, playtime)
+    sql_get_vid_ratings_pair = "SELECT vid, SUM(EXTRACT(EPOCH FROM (endtime-starttime)))/3600 AS playtime FROM gameplay WHERE uid=%s GROUP BY vid ORDER BY playtime DESC LIMIT 10"
+    curs.execute(sql_get_vid_ratings_pair, uid)
+    conn.commit()
+    top_ten_data_playtime = []
+    vid_rating_data = curs.fetchall()#From the top to the tenth top game.
+    for vid_pair in vid_rating_data:
+
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_name_sql)
+        conn.commit()
+        game_name = curs.fetchone()
+
+        game_desc_sql = f"SELECT description FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_desc_sql)
+        conn.commit()
+        game_desc = curs.fetchone()
+
+        game_image_sql = f"SELECT image FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_image_sql)
+        conn.commit()
+        game_image = curs.fetchone()
+
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={vid_pair[0]};"#Get average rating of game.
+        curs.execute(user_avg_rating_sql)
+        conn.commit()
+        user_avg_rating = curs.fetchone()
+
+
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(developer_list_sql)
+        conn.commit()
+        developer_list_raw = curs.fetchall()
+        developer_list = []
+        for tup in developer_list_raw:
+            developer_list.append(tup[0])
+
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(publisher_list_sql)
+        conn.commit()
+        publisher_list_raw = curs.fetchall()
+        publisher_list = []
+        for tup in publisher_list_raw:
+            publisher_list.append(tup[0])
+        #Get esrb rating
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_esrb_rating_sql)
+        conn.commit()
+        game_esrb_rating = curs.fetchone()
+
+
+        #Get playtime
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={vid_pair[0]} AND uid={LOGGED_IN_USER_ID};"
+        curs.execute(user_playtime_sql)
+        conn.commit()
+        user_playtime = curs.fetchall()
+
+
+        platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
+        curs.execute(platform_and_price_list_sql)
+        conn.commit()
+        platform_and_price_list = curs.fetchall()
+
+        top_ten_dict = {
+            "vid" : vid_pair[0],
+            "hoursInGame" : vid_pair[1],
+            "name": game_name[0],
+            "description": game_desc[0],
+            "banner": game_image[0],
+            "platforms": platform_and_price_list,
+            "developers": developer_list,
+            "publishers": publisher_list,
+            "gameplay": user_playtime,
+            "esrb_rating": game_esrb_rating[0],
+            "rating": user_avg_rating[0]
+        }
+        top_ten_data_playtime.append(top_ten_dict)
+    return top_ten_data_playtime, 200
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5050)
