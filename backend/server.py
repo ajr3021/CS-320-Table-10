@@ -982,7 +982,7 @@ def getTotalFollowed(uid):#Get all people a person follows.
         "followed" :  followed_num[0]
     }
 
-    return followedDict, 200
+    return followed_dict, 200
 
 @app.route("/api/videogame/<uid>/collectionNumber", methods = ['GET'])
 @cross_origin(origins="*")
