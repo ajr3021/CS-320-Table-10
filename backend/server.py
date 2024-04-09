@@ -923,24 +923,20 @@ def searchAndSortGames(uid, searchBy, data):
             user_playtime = []
 
 
-        platform_list_sql = f"SELECT pname FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
-        curs.execute(platform_list_sql)
+        platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
+        curs.execute(platform_and_price_list_sql)
         conn.commit()
         try:
-            platform_list_raw = curs.fetchall()
+            platform_and_price_list = curs.fetchall()
         except:
-            platform_list_raw = []
-        platform_list = []
-        for tup in platform_list_raw:
-            platform_list.append(tup[0])
+            platform_and_price_list = []
 
         game_dict = {
             "vid": str(gameId[0]),
             "name": game_name[0],
             "description": game_desc[0],
-            "price": price,
             "banner": game_image[0],
-            "platforms": platform_list,
+            "platforms": platform_and_price_list,
             "developers": developer_list,
             "publishers": publisher_list,
             "gameplay": user_playtime,
