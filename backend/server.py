@@ -800,7 +800,6 @@ def searchAndSortGames(uid, searchBy, data):
             "vid": str(gameId[0]),
             "name": game_name[0],
             "description": game_desc[0],
-            "price": price,
             "banner": game_image[0],
             "platforms": platform_and_price_list,
             "developers": developer_list,
