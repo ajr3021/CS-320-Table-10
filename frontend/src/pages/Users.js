@@ -99,6 +99,10 @@ const Users = () => {
         e.preventDefault();
         const email = e.target.form[0].value;
 
+        if(email.length === 0){
+            return;
+        }
+
         // make fetch request
         fetch(`http://localhost:5050/api/user/follow/${email}`, {
             headers: {

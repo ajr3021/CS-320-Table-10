@@ -91,7 +91,10 @@ def signup():
     sql = "SELECT COUNT(*) from player"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
 
     uid = result[0][0] + 1
@@ -120,7 +123,10 @@ def login():
     sql = f"SELECT password, uid FROM player WHERE username='{username}';"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
 
     hashed_password = result[0][0]
@@ -143,7 +149,10 @@ def create_empty_collection():
     sql = "SELECT COUNT(*) from collection"
 
     curs.execute(sql)
-    result = curs.fetchall() 
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200 
     conn.commit()
 
     cid = int(result[0][0]) * 100 + 1
@@ -157,101 +166,17 @@ def create_empty_collection():
     curs.execute(sql)
     conn.commit()
 
-    sql = f"INSERT INTO collections_made (cid, uid) VALUES('{cid}','{LOGGED_IN_USER_ID}');"
+    sql = f"INSERT INTO collections_made (cid, uid) VALUES('{cid}','1');"
 
     curs.execute(sql)
     conn.commit()
 
     return {"cid": cid}, 200
 
-
-@app.route("/api/collection/<cid>", methods=['GET'])  # By default only GET requests are handled.
-@cross_origin(origins="*")
-def get_collection_by_id(cid):
-    sql1 = f"SELECT cname FROM collection WHERE cid={cid};"
-
-    curs.execute(sql1)
-    collection_name = curs.fetchall()
-    conn.commit()
-
-    sql2 = f"""WITH IdList AS (SELECT vid FROM collection_has WHERE cid={cid}) SELECT i.vid, t1.title, t1.esrb_rating, t2.rating, t3.gameplay, t1.description, t1.image FROM IdList AS i
-        LEFT JOIN video_game AS t1 ON t1.vid = i.vid
-        LEFT JOIN (SELECT vid, AVG(rating) as rating FROM rates GROUP BY vid) AS t2 ON t2.vid = i.vid
-        LEFT JOIN (SELECT vid, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS gameplay FROM gameplay GROUP BY vid) AS t3 ON t3.vid = i.vid;"""
-
-    curs.execute(sql2)
-    games = curs.fetchall()
-    conn.commit()
-
-    gamelist = list()
-    for game in games:
-        gamedict = dict()
-        vid = game[0]
-        gamedict["vid"] = int(vid)
-        gamedict["name"] = game[1]
-        gamedict["esrb_rating"] = game[2]
-        if game[3] is not None:
-            gamedict["rating"] = int(game[3])
-        else:
-            gamedict["rating"] = 0
-
-        try:
-            gameplay = game[4]
-        except:
-            gameplay = 0
-
-        gamedict["description"] = game[5]
-        gamedict["banner"] = game[6]
-
-        if gameplay is None:
-            gameplay = 0
-        gamedict["gameplay"] = int(gameplay)
-        # get genres for the game
-        genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
-        curs.execute(genre_sql)
-        temp = curs.fetchall()
-        temp2 = []
-        for lst in temp:
-            temp2.append(lst[0])
-        gamedict["genres"] = temp2
-        # get the platforms the game is on
-        platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
-        curs.execute(platform_sql)
-        temp = curs.fetchall()
-        temp2 = []
-        for item in temp:
-            newdict = dict()
-            newdict["platform"] = item[0]
-            newdict["price"] = item[1]
-            gamedict["price"] = item[1]
-            temp2.append(newdict)
-        gamedict["platforms"] = temp2
-        # get the developers of the game
-        developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
-        curs.execute(developer_sql)
-        temp = curs.fetchall()
-        temp2 = []
-        for lst in temp:
-            temp2.append(lst[0])
-        gamedict["developers"] = temp2
-        gamelist.append(gamedict)
-
-    try:
-        result3 = {
-            "name": collection_name[0][0],
-            "games": gamelist
-        }
-    except:
-        return {}, 200
-    return result3
-
-
-# tested ^
-
 @app.route("/api/collection/user", methods=['GET'])
 @cross_origin(origins="*")
 def get_collection_by_user():
-    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid={LOGGED_IN_USER_ID} GROUP BY collection.cid ORDER BY cname;"
+    sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid=1 GROUP BY collection.cid ORDER BY cname;"
 
     curs.execute(sql)
     try:
@@ -281,13 +206,124 @@ def get_collection_by_user():
     return final_result
 
 
+@app.route("/api/collection/<cid>", methods=['GET'])  # By default only GET requests are handled.
+@cross_origin(origins="*")
+def get_collection_by_id(cid):
+    sql1 = f"SELECT cname FROM collection WHERE cid={cid};"
+
+    curs.execute(sql1)
+    try:
+        collection_name = curs.fetchall()
+    except:
+        return {}, 200
+    conn.commit()
+
+    sql2 = f"""WITH IdList AS (SELECT vid FROM collection_has WHERE cid={cid}) SELECT i.vid, t1.title, t1.esrb_rating, t2.rating, t3.gameplay, t1.description, t1.image FROM IdList AS i
+        LEFT JOIN video_game AS t1 ON t1.vid = i.vid
+        LEFT JOIN (SELECT vid, AVG(rating) as rating FROM rates GROUP BY vid) AS t2 ON t2.vid = i.vid
+        LEFT JOIN (SELECT vid, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS gameplay FROM gameplay GROUP BY vid) AS t3 ON t3.vid = i.vid;"""
+
+    curs.execute(sql2)
+    try:
+        games = curs.fetchall()
+    except:
+        return {}, 200
+    conn.commit()
+
+    gamelist = list()
+    for game in games:
+        gamedict = dict()
+        vid = game[0]
+        gamedict["vid"] = int(vid)
+        gamedict["name"] = game[1]
+        gamedict["esrb_rating"] = game[2]
+        if game[3] is not None:
+            gamedict["rating"] = int(game[3])
+        else:
+            gamedict["rating"] = 0
+
+        try:
+            gameplay = game[4]
+        except:
+            gameplay = 0
+
+        try:
+            gamedict["description"] = game[5]
+        except:
+            gamedict["description"] = ''
+
+        try:
+            gamedict["banner"] = game[6]
+        except:
+            gamedict["banner"] = ''
+
+        if gameplay is None:
+            gameplay = 0
+        gamedict["gameplay"] = int(gameplay)
+        # get genres for the game
+        genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
+        curs.execute(genre_sql)
+        try:
+            temp = curs.fetchall()
+        except:
+            return {}, 200
+        temp2 = []
+        for lst in temp:
+            temp2.append(lst[0])
+        gamedict["genres"] = temp2
+        # get the platforms the game is on
+        platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
+        curs.execute(platform_sql)
+        try:
+            temp = curs.fetchall()
+        except:
+            return {}, 200
+        temp2 = []
+        for item in temp:
+            newdict = dict()
+            newdict["platform"] = item[0]
+            newdict["price"] = item[1]
+            gamedict["price"] = item[1]
+            temp2.append(newdict)
+        gamedict["platforms"] = temp2
+        # get the developers of the game
+        developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
+        curs.execute(developer_sql)
+        try:
+            temp = curs.fetchall()
+        except:
+            return {}, 200
+        temp2 = []
+        for lst in temp:
+            temp2.append(lst[0])
+        gamedict["developers"] = temp2
+        gamelist.append(gamedict)
+
+    try:
+        result3 = {
+            "name": collection_name[0][0],
+            "games": gamelist
+        }
+    except:
+        return {}, 200
+    return result3
+
+
+# tested ^
+
+
+
+
 @app.route("/api/collection/user")
 @cross_origin(origins="*")
 def get_collection_by_current_user():
     sql = f"SELECT collection.cid, cname as name, COUNT(vg.vid) AS numGames, COALESCE(EXTRACT(EPOCH FROM SUM(endtime-starttime)/3600),0) as totalTimePlayed FROM collections_made LEFT JOIN collection ON collections_made.cid = collection.cid LEFT JOIN collection_has ON collection.CID = collection_has.CID LEFT JOIN video_game vg on collection_has.VID = vg.VID LEFT JOIN p320_10.gameplay g on vg.VID = g.vid WHERE collections_made.uid = {LOGGED_IN_USER_ID} GROUP BY collection.cid;"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
 
     final_result = []
@@ -323,7 +359,10 @@ def insert_videogame_into_collection(cid,vid):
 
     curs.execute(sql)
     curs.execute(sql2)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
 
     return result
@@ -373,7 +412,10 @@ def change_collection_title_by_id(cid):
 def get_random_videogame(cid):
     game_sql = f"SELECT vid FROM collection_has WHERE cid={cid} ORDER BY RANDOM() LIMIT 1;"
     curs.execute(game_sql)
-    vid_sql = curs.fetchall()
+    try:
+        vid_sql = curs.fetchall()
+    except:
+        return {}, 200
     vid = vid_sql[0][0]
 
     gamedict = dict()
@@ -382,32 +424,50 @@ def get_random_videogame(cid):
 
     title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
     curs.execute(title_sql)
-    title = curs.fetchall()
+    try:
+        title = curs.fetchall()
+    except:
+        title = [['']]
     gamedict["title"] = title[0][0]
 
     description_sql = f"SELECT description FROM video_game WHERE vid = {vid};"
     curs.execute(description_sql)
-    description = curs.fetchall()
+    try:
+        description = curs.fetchall()
+    except:
+        description = [['']]
     gamedict["description"] = description[0][0]
 
     image_sql = f"SELECT image FROM video_game WHERE vid = {vid};"
     curs.execute(image_sql)
-    image = curs.fetchall()
+    try:
+        image = curs.fetchall()
+    except:
+        image = [['']]
     gamedict["banner"] = image[0][0]
 
     esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
     curs.execute(esrb_sql)
-    esrb = curs.fetchall()
+    try:
+        esrb = curs.fetchall()
+    except:
+        esrb = [['']]
     gamedict["esrb_rating"] = esrb[0][0]
 
     rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE VID = {vid};"
     curs.execute(rating_sql)
-    rating = curs.fetchall()
+    try:
+        rating = curs.fetchall()
+    except:
+        rating = [[0]]
     gamedict["rating"] = int(rating[0][0])
 
     gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
     curs.execute(gameplay_sql)
-    gameplay = curs.fetchall()
+    try:
+        gameplay = curs.fetchall()
+    except:
+        gameplay = []
     if gameplay == []:
         gameplay = 0
     gamedict["gameplay"] = gameplay
@@ -415,7 +475,10 @@ def get_random_videogame(cid):
     # get genres for the game
     genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
     curs.execute(genre_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for lst in temp:
         temp2.append(lst[0])
@@ -423,7 +486,10 @@ def get_random_videogame(cid):
     # get the platforms the game is on
     platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
     curs.execute(platform_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for item in temp:
         newdict = dict()
@@ -434,7 +500,10 @@ def get_random_videogame(cid):
     # get the developers of the game
     developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
     curs.execute(developer_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for item in temp:
         temp2.append(item[0])
@@ -454,42 +523,61 @@ def get_videogame_by_id(vid):
 
     title_sql = f"SELECT title FROM video_game WHERE vid = {vid};"
     curs.execute(title_sql)
-    title = curs.fetchall()
-    print(title)
+    try:
+        title = curs.fetchall()
+    except:
+        title = [['']]
+
     if title is not None and title != []:
         gamedict["title"] = title[0][0]
 
     description_sql = f"SELECT description FROM video_game WHERE vid = {vid};"
     curs.execute(description_sql)
-    description = curs.fetchall()
+    try:
+        description = curs.fetchall()
+    except:
+        description = [['']]
+
     if description is not None and description != []:
         gamedict["description"] = description[0][0]
 
     image_sql = f"SELECT image FROM video_game WHERE vid = {vid};"
     curs.execute(image_sql)
-    image = curs.fetchall()
+    try:
+        image = curs.fetchall()
+    except:
+        image = [['']]
     if image is not None and image != []:
         gamedict["banner"] = image[0][0]
 
     esrb_sql = f"SELECT esrb_rating FROM video_game WHERE vid = {vid};"
     curs.execute(esrb_sql)
-    esrb = curs.fetchall()
+    try:
+        esrb = curs.fetchall()
+    except:
+        esrb = [['']]
+
     if esrb is not None and esrb != []:
         gamedict["esrb_rating"] = esrb[0][0]
 
     rating_sql = f"SELECT AVG(rating) AS average_rating FROM Rates WHERE vid = {vid};"
     curs.execute(rating_sql)
-    rating = curs.fetchall()
+    try:
+        rating = curs.fetchall()
+    except:
+        rating = [[0]]
 
     gamedict["rating"] = 0
 
-    print(rating)
     if rating is not None and rating[0][0] is not None:
         gamedict["rating"] = int(rating[0][0])
 
     gameplay_sql = f"SELECT EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS total_hours from gameplay where vid={vid} GROUP BY vid;"
     curs.execute(gameplay_sql)
-    gameplay = curs.fetchall()
+    try:
+        gameplay = curs.fetchall()
+    except:
+        gameplay = []
     if gameplay == []:
         gameplay = 0
     gamedict["gameplay"] = gameplay
@@ -497,7 +585,10 @@ def get_videogame_by_id(vid):
     # get genres for the game
     genre_sql = f"SELECT gname FROM has_genre LEFT JOIN genre ON has_genre.GID = genre.GID WHERE vid={vid};"
     curs.execute(genre_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for lst in temp:
         temp2.append(lst[0])
@@ -505,7 +596,10 @@ def get_videogame_by_id(vid):
     # get the platforms the game is on
     platform_sql = f"SELECT pname, price FROM game_platform LEFT JOIN platform ON game_platform.pid = platform.pid WHERE vid={vid};"
     curs.execute(platform_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for item in temp:
         gamedict["price"] = item[1]
@@ -514,7 +608,10 @@ def get_videogame_by_id(vid):
     # get the developers of the game
     developer_sql = f"SELECT sname FROM development LEFT JOIN studio ON development.sid = studio.sid WHERE vid={vid};"
     curs.execute(developer_sql)
-    temp = curs.fetchall()
+    try:
+        temp = curs.fetchall()
+    except:
+        temp = [[]]
     temp2 = []
     for lst in temp:
         temp2.append(lst[0])
@@ -555,7 +652,10 @@ def getGame(vid):
     sql = "SELECT * FROM video_game WHERE vid=%s;"
 
     curs.execute(sql, (vid,))
-    result = curs.fetchall() #This should always be of size one. Otherwise database has an issue.
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
 
     return result, 200
@@ -632,10 +732,11 @@ def get_friends():
     sql = f"SELECT username, email, player.uid FROM friends LEFT JOIN player ON friends.fid = player.uid WHERE friends.UID = {LOGGED_IN_USER_ID};"
 
     curs.execute(sql)
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit()
-
-    print(result)
 
     final_result = []
 
@@ -690,7 +791,10 @@ def findByEmail(email):
     sql = f"SELECT x.username, x.email, x.uid FROM (SELECT username, email, uid FROM player WHERE ( email LIKE \'{email}%\' ) AND uid NOT IN (SELECT uid FROM friends WHERE fid = {LOGGED_IN_USER_ID}) ) as x WHERE uid != {LOGGED_IN_USER_ID};"
 
     curs.execute(sql)   #Execute sql statement
-    result = curs.fetchall()
+    try:
+        result = curs.fetchall()
+    except:
+        return {}, 200
     conn.commit() #Should probably be changed given problem with database transaction
 
     final_result = []
@@ -735,37 +839,55 @@ def searchAndSortGames(uid, searchBy, data):
     games_results = []
     curs.execute(mainQuery)
     conn.commit()
-    game_list = curs.fetchall()#This should fetch tuples of title and vid
+    try:
+        game_list = curs.fetchall()
+    except:
+        return {}, 200
     for gameId in game_list:
         print(str(gameId[0]))
         print(type(str(gameId[0])))
         game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_name_sql)
         conn.commit()
-        game_name = curs.fetchone()
+        try:
+            game_name = curs.fetchone()
+        except:
+            game_name = ['']
 
         game_desc_sql = f"SELECT description FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_desc_sql)
         conn.commit()
-        game_desc = curs.fetchone()
+        try:
+            game_desc = curs.fetchone()
+        except:
+            game_desc = ['']
 
         game_image_sql = f"SELECT image FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_image_sql)
         conn.commit()
-        game_image = curs.fetchone()
+        try:
+            game_image = curs.fetchone()
+        except:
+            game_image = ['']
 
         price = 40
 
         user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={gameId[0]};"#Get average rating of game.
         curs.execute(user_avg_rating_sql)
         conn.commit()
-        user_avg_rating = curs.fetchone()
+        try:
+            user_avg_rating = curs.fetchone()
+        except:
+            user_avg_rating = ['']
 
 
         developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={gameId[0]};"
         curs.execute(developer_list_sql)
         conn.commit()
-        developer_list_raw = curs.fetchall()
+        try:
+            developer_list_raw = curs.fetchall()
+        except:
+            developer_list_raw = []    
         developer_list = []
         for tup in developer_list_raw:
             developer_list.append(tup[0])
@@ -773,7 +895,10 @@ def searchAndSortGames(uid, searchBy, data):
         publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={gameId[0]};"
         curs.execute(publisher_list_sql)
         conn.commit()
-        publisher_list_raw = curs.fetchall()
+        try:
+            publisher_list_raw = curs.fetchall()
+        except:
+            publisher_list_raw = []
         publisher_list = []
         for tup in publisher_list_raw:
             publisher_list.append(tup[0])
@@ -781,20 +906,30 @@ def searchAndSortGames(uid, searchBy, data):
         game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_esrb_rating_sql)
         conn.commit()
-        game_esrb_rating = curs.fetchone()
+
+        try:
+            game_esrb_rating = curs.fetchone()
+        except:
+            game_esrb_rating = []
 
 
         #Get playtime
         user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={gameId[0]} AND uid={LOGGED_IN_USER_ID};"
         curs.execute(user_playtime_sql)
         conn.commit()
-        user_playtime = curs.fetchall()
+        try:
+            user_playtime = curs.fetchall()
+        except:
+            user_playtime = []
 
 
         platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={gameId[0]};"
         curs.execute(platform_and_price_list_sql)
         conn.commit()
-        platform_and_price_list = curs.fetchall()
+        try:
+            platform_and_price_list = curs.fetchall()
+        except:
+            platform_and_price_list = []
 
         game_dict = {
             "vid": str(gameId[0]),

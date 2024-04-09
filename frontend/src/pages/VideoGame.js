@@ -42,7 +42,8 @@ const VideoGame = () => {
             return res.json();
         }).then(data => {
             setCollections(data);
-            console.log("Collections: " + data)
+            console.log("COLLECTIONS")
+            console.log(data)
         })
     }, [])
 

@@ -29,6 +29,7 @@ const Collection = () => {
           setData(data);
           setEditName(data.name);
           console.log(data)
+          console.log("for search with id " + collectionId)
       })
     }, [])
 

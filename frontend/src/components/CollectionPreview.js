@@ -6,26 +6,41 @@ const CollectionPreview = ({selected}) => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
 
-  useEffect(() => {
-    fetch(`http://localhost:5050/api/collection/user`, {
-          headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-          },
+  const updateData = (newData) => {
+    localStorage.setItem("collectionPreviewData", JSON.stringify(newData))
+    console.log("ADDING TO LOCAL STORAGE")
+    setData(data)
+    window.location.reload()
+  }
 
-          method: 'GET',
-      }).then(res => {
-          return res.json();
-      }).then(data => {
-          setData(data);
-          console.log(data)
-      })
+  useEffect(() => {
+    const localData = localStorage.getItem('collectionPreviewData')
+    if(localData){
+      const resultJson = JSON.parse(localData);
+      setData(resultJson)
+      console.log("GRABBING FROM LOCAL STORAGE")
+    }else{
+      fetch(`http://localhost:5050/api/collection/user`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+
+            method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            updateData(data)
+            console.log("COLLECTIONS")
+            console.log(data)
+        })
+    }
   }, [])
 
   const deleteElement = (id) => {
     const copy = [...data]
     const result = copy.filter(collection => collection.cid !== id);
-    setData(result);
+    updateData(result);
 
     fetch(`http://localhost:5050/api/collection/${id}`, {
       method: 'DELETE',
@@ -49,7 +64,8 @@ const CollectionPreview = ({selected}) => {
     e.preventDefault();
 
     if(e.target.form[0].value.length !== 0){
-      setName("");
+      console.log(e.target.form[0].value)
+      setName(e.target.form[0].value);
 
       const payload = {
         "name": e.target.form[0].value,
@@ -68,16 +84,22 @@ const CollectionPreview = ({selected}) => {
       }).then(res => {
           return res.json()
       }).then(js => {
+        console.log(js)
         const result = {
           "cid": js.cid,
-          "name": e.target.form[0].value,
+          "name": name,
           "numGames": 0,
           "totalTimePlayed": "0:00"
         }
+
+        console.log(result)
   
         // when there is the backend, send the request and record the response
   
-        setData([...data, result]);
+        updateData([...data, result]);
+        setName("")
+
+        console.log(data)
       })
     }
   }
