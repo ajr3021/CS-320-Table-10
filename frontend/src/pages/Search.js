@@ -30,6 +30,10 @@ const Search = () => {
         "Genre": 'genre' 
       }
 
+      if(e.target.form[0].value.length === 0){
+        return;
+      }
+
       // set request
       fetch(`http://localhost:5050/api/videogame/1/${map[searchBy]}/${e.target.form[0].value}`, {
             headers: {

@@ -11,6 +11,7 @@ import SignUp from './pages/SignUp';
 
 
 function App() {
+  // localStorage.clear();
   return (
     <BrowserRouter>
       <Routes>
