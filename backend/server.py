@@ -155,7 +155,7 @@ def create_empty_collection():
         return {}, 200 
     conn.commit()
 
-    cid = int(result[0][0]) * 100 + 1
+    cid = int(result[0][0]) * 100 + 2
 
     data = request.get_json(force=True)
 
@@ -342,7 +342,7 @@ def get_collection_by_current_user():
 @cross_origin(origins="*")
 def rate_videogame(vid, data):
     rating = int(data)
-    sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})"
+    sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})cd "
 
     curs.execute(sql)
     conn.commit()
@@ -627,16 +627,17 @@ def get_videogame_by_id(vid):
 @app.route("/api/videogame/<uid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def addPlaytime(uid, vid):
-    sTime = str(request.args.get("starttime"))
+    data = request.get_json(force=True)
+    sTime = str(data["starttime"])
     sTimeNumbers = sTime.split(':')
 
-    startTime = datetime.datetime.now()
+    startTime = datetime.now()
     startTime = startTime.replace(hour = int(sTimeNumbers[0]),minute = int(sTimeNumbers[1]))
 
-    eTime = str(request.args.get("endtime"))
+    eTime = str(data["endtime"])
     eTimeNumbers = eTime.split(':')
 
-    endTime = datetime.datetime.now()
+    endTime = datetime.now()
     endTime = endTime.replace(hour = int(eTimeNumbers[0]),minute = int(eTimeNumbers[1]))
 
     sql = "INSERT INTO gameplay(uid, vid, starttime, endtime) VALUES (%s, %s, %s, %s);"
