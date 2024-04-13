@@ -155,7 +155,7 @@ def create_empty_collection():
         return {}, 200 
     conn.commit()
 
-    cid = int(result[0][0]) * 100 + 2
+    cid = int(result[0][0]) * 100 + 1
 
     data = request.get_json(force=True)
 
@@ -342,7 +342,7 @@ def get_collection_by_current_user():
 @cross_origin(origins="*")
 def rate_videogame(vid, data):
     rating = int(data)
-    sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})cd "
+    sql = f"INSERT INTO rates (uid, vid, rating) VALUES ({LOGGED_IN_USER_ID}, {vid}, {rating})"
 
     curs.execute(sql)
     conn.commit()
