@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import '../css/VideoGame.css'
-import VideoGamePreview from "../components/VideoGamePreview";
 
 const VideoGame = () => {
     const { videoGameId } = useParams();
@@ -31,21 +30,28 @@ const VideoGame = () => {
     }, [])
 
     useEffect(() => {
-        fetch(`http://localhost:5050/api/collection/user`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-
-            method: 'GET',
-        }).then(res => {
-            return res.json();
-        }).then(data => {
-            setCollections(data);
-            console.log("COLLECTIONS")
-            console.log(data)
-        })
-    }, [])
+        const localData = localStorage.getItem('collectionPreviewData')
+        if(localData){
+          const resultJson = JSON.parse(localData);
+          setCollections(resultJson)
+          console.log("GRABBING FROM LOCAL STORAGE")
+        }else{
+          fetch(`http://localhost:5050/api/collection/user`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+    
+                method: 'GET',
+            }).then(res => {
+                return res.json();
+            }).then(data => {
+                setCollections(data)
+                console.log("COLLECTIONS")
+                console.log(data)
+            })
+        }
+      }, [])
 
     const displayTime = () => {
         let minutes = Math.floor(timePlayedInSeconds / 60).toString();
@@ -64,20 +70,48 @@ const VideoGame = () => {
 
     const play = (e) => {
         e.preventDefault();
-       
+        
         console.log(e.target.form[0].value);
         console.log(e.target.form[1].value);
+
+        const payload = {
+            "starttime": e.target.form[0].value,
+            "endtime": e.target.form[1].value
+          }
+    
+          const res = JSON.stringify(payload);
+
+        fetch(`http://localhost:5050/api/videogame/1/${videoGameId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+
+            method: 'POST',
+            body: res
+        }).then(res => {
+            localStorage.clear();
+            window.location.reload();
+        })
     }
 
     const rate = (e) => {
         e.preventDefault();
 
-        console.log(e.target.form[0].value);
+        fetch(`http://localhost:5050/api/rating/${videoGameId}/${e.target.form[0].value}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+
+                method: 'POST',
+            }).then(res => {
+                window.location.reload();
+            })
     }
 
     const addToCollection = (e) => {
         e.preventDefault();
-        console.log(checkedCollectionIds);
 
         checkedCollectionIds.forEach(id => {
             fetch(`http://localhost:5050/api/collection/${id}/${videoGameId}`, {
@@ -87,6 +121,9 @@ const VideoGame = () => {
                 },
 
                 method: 'POST',
+            }).then(res => {
+                localStorage.clear();
+                window.location.reload();
             })
         })
     }

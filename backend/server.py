@@ -629,13 +629,14 @@ def get_videogame_by_id(vid):
 @app.route("/api/videogame/<uid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def addPlaytime(uid, vid):
-    sTime = str(request.args.get("starttime"))
+    data = request.get_json(force=True)
+    sTime = str(data["starttime"])
     sTimeNumbers = sTime.split(':')
 
     startTime = datetime.datetime.now()
     startTime = startTime.replace(hour=int(sTimeNumbers[0]), minute=int(sTimeNumbers[1]))
 
-    eTime = str(request.args.get("endtime"))
+    eTime = str(data["endtime"])
     eTimeNumbers = eTime.split(':')
 
     endTime = datetime.datetime.now()
