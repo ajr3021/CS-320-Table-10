@@ -1036,9 +1036,7 @@ def getUserTopGamesByDeveloper():
 @cross_origin(origins="*")
 def getUserTopGamesByPlatform():
     uid = LOGGED_IN_USER_ID
-    sql_get_platform = (f"SELECT pname, count(pname) AS amount FROM gameplay LEFT JOIN game_platform on gameplay.vid = "
-                   f"game_platform.VID LEFT JOIN platform ON platform.pid = game_platform.pid WHERE gameplay.uid = {
-                   uid} GROUP BY pname ORDER BY amount DESC LIMIT 1")
+    sql_get_platform = (f"SELECT pname, count(pname) AS amount FROM gameplay LEFT JOIN game_platform on gameplay.vid = game_platform.VID LEFT JOIN platform ON platform.pid = game_platform.pid WHERE gameplay.uid = {uid} GROUP BY pname ORDER BY amount DESC LIMIT 1")
     curs.execute(sql_get_platform)
     conn.commit()
     favorite_platform = curs.fetchone()
