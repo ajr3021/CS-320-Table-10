@@ -15,10 +15,9 @@ const CollectionPreview = ({selected}) => {
 
   useEffect(() => {
     const localData = localStorage.getItem('collectionPreviewData')
-    if(localData){
+    if(localData && localData !== '[]'){
       const resultJson = JSON.parse(localData);
       setData(resultJson)
-      console.log("GRABBING FROM LOCAL STORAGE")
     }else{
       fetch(`http://localhost:5050/api/collection/user`, {
             headers: {

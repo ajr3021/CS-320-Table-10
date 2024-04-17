@@ -7,26 +7,52 @@ const Home = () => {
 
   const navigate = useNavigate();
 
-  const [data, setData] = useState({});
+  const [data, setData] = useState({"top10": []});
+  const [data90, setData90] = useState({"top90": []})
 
   useEffect(() => {
-    fetch(`http://localhost:5050/api/videogame/1/topTenGamesByRating`, {
-          headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-          },
-
-          method: 'GET',
-      }).then(res => {
-          return res.json();
-      }).then(data => {
-
-          setData({
-            "top10": data
-          });
-          console.log("TOP 10")
-          console.log(data.top10)
+    const localData = localStorage.getItem('homeTop10')
+    if(localData && localData !== '[]'){
+      const resultJson = JSON.parse(localData);
+      setData({
+        "top10": resultJson,
+        "top90": data.top90
       })
+    }else{
+      fetch(`http://localhost:5050/api/videogame/1/topTenGamesByRating`, {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+
+            method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(js => {
+
+            setData({
+              "top10": js
+            });
+            if(js.length !== 0){
+              localStorage.setItem('homeTop10', JSON.stringify(js))
+            }
+      })
+    }
+
+    fetch(`http://localhost:5050/api/videogame/popular/90`, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+
+        method: 'GET',
+    }).then(res => {
+        return res.json();
+    }).then(js => {
+        setData90({
+          "top90": js,
+        });
+    })
   }, [])
 
   return (
@@ -34,6 +60,10 @@ const Home = () => {
       <div className="top10">
         <h1>Top 10 Games by Rating: </h1>
         <VideoGamePreview games={data.top10} deleteGame={null}/>
+      </div>
+      <div className="top90">
+        <h1>Top 20 Games in the Last 90 Days: </h1>
+        <VideoGamePreview games={data90.top90} deleteGame={null}/>
       </div>
     </div>
   );

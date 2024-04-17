@@ -1,10 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 
 const VideoGamePreview = ({games = [], deleteGame=(id) => {}}) => {
-
-  console.log("PREVIEW")
-  console.log(games)
-
   const navigate = useNavigate();
 
   const redirectToGame = (vid) => {
@@ -21,8 +17,12 @@ const VideoGamePreview = ({games = [], deleteGame=(id) => {}}) => {
   }
 
   const hasGames = () => {
+    if(games === undefined || games.length === 0 || JSON.stringify(games) === '{}') { return (<div>
+      <h1>No VideoGames to Display</h1>
+    </div>)}
     return (
       games.map(game => {
+        if(game.vid === undefined){return}
         return(
             <div key={game.vid} className='gameCard'>
                 <div className='game-banner'>
