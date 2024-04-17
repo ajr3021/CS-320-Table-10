@@ -188,8 +188,6 @@ def get_collection_by_user():
         result = []
     conn.commit()
 
-    print(result)
-
     final_result = []
 
     try:
@@ -203,8 +201,6 @@ def get_collection_by_user():
             })
     except:
         pass
-
-    print(final_result)
 
     return final_result
 
@@ -694,7 +690,127 @@ def get_top_twenty_games():
     result = curs.fetchall()
     conn.commit()
 
-    print("----------------------------------")
+    top_twenty_data = []
+    for vid_pair in result:
+
+        try:
+            vid = int(vid_pair[0])
+        except:
+            continue
+
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={vid};"
+        curs.execute(game_name_sql)
+        conn.commit()
+        try:
+            game_name = curs.fetchone()
+        except:
+            game_name = ''
+
+        game_desc_sql = f"SELECT description FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_desc_sql)
+        conn.commit()
+        try:
+            game_desc = curs.fetchone()
+        except:
+            game_desc = ''
+
+        game_image_sql = f"SELECT image FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_image_sql)
+        conn.commit()
+        try:
+            game_image = curs.fetchone()
+        except:
+            game_image = ''
+
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={vid_pair[0]};"  # Get average rating of game.
+        curs.execute(user_avg_rating_sql)
+        conn.commit()
+        try:
+            user_avg_rating = curs.fetchone()
+        except:
+            user_avg_rating = 0
+
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(developer_list_sql)
+        conn.commit()
+        try:
+            developer_list_raw = curs.fetchall()
+        except:
+            developer_list_raw = []
+        developer_list = []
+        for tup in developer_list_raw:
+            developer_list.append(tup[0])
+
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(publisher_list_sql)
+        conn.commit()
+        try:
+            publisher_list_raw = curs.fetchall()
+        except:
+            publisher_list_raw = []
+        publisher_list = []
+        for tup in publisher_list_raw:
+            publisher_list.append(tup[0])
+        # Get esrb rating
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_esrb_rating_sql)
+        conn.commit()
+        try:
+            game_esrb_rating = curs.fetchone()
+        except:
+            game_esrb_rating = ''
+
+        # Get playtime
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={vid_pair[0]} AND uid={LOGGED_IN_USER_ID};"
+        curs.execute(user_playtime_sql)
+        conn.commit()
+        try:
+            user_playtime = curs.fetchall()
+        except:
+            user_playtime = 0
+
+        platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
+        curs.execute(platform_and_price_list_sql)
+        conn.commit()
+
+        try:
+            platform_and_price_list = curs.fetchall()
+        except:
+            platform_and_price_list = []
+
+        try:
+            data = {
+                "vid": vid_pair[0],
+                "user_rating": user_avg_rating,
+                "name": game_name[0],
+                "description": game_desc[0],
+                "banner": game_image[0],
+                "platforms": platform_and_price_list,
+                "developers": developer_list,
+                "publishers": publisher_list,
+                "gameplay": vid_pair[1],
+                "esrb_rating": game_esrb_rating[0],
+                "rating": int(user_avg_rating[0]),
+                "price": platform_and_price_list[0][1]
+            }
+        except:
+            data = {}
+        top_twenty_data.append(data)
+    return top_twenty_data, 200
+
+
+@app.route("/api/videogame/friends/<uid>/top20", methods=['GET'])
+@cross_origin(origins="*")
+def get_top_twenty_games_from_friends(uid):
+    sql = "SELECT g.vid, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS TotalPlaytime " \
+          f"FROM gameplay g INNER JOIN friends f ON g.UID = f.FID " \
+          f"WHERE f.uid = {uid} GROUP BY g.vid ORDER BY TotalPlaytime DESC LIMIT 20;"
+
+    curs.execute(sql)
+    result = curs.fetchall()
+    conn.commit()
+
+    print("-------------------")
     print(result)
 
     top_twenty_data = []
@@ -806,21 +922,7 @@ def get_top_twenty_games():
     return top_twenty_data, 200
 
 
-@app.route("/api/videogame/friends/<uid>", methods=['GET'])
-@cross_origin(origins="*")
-def get_top_twenty_games_from_friends(uid):
-    sql = "SELECT g.VID, EXTRACT(EPOCH FROM SUM(endtime-starttime))/3600 AS TotalPlaytime " \
-          f"FROM Gameplay g INNER JOIN Friends f ON g.UID = f.FID " \
-          f"WHERE f.UID = {uid} GROUP BY g.VID ORDER BY TotalPlaytime DESC LIMIT 20;"
-
-    curs.execute(sql)
-    result = curs.fetchall()
-    conn.commit()
-
-    return result, 200
-
-
-@app.route("/api/videogame/rating", methods=['GET'])
+@app.route("/api/videogame/rating/top5", methods=['GET'])
 @cross_origin(origins="*")
 def get_top_five_new_released():
     sql = "SELECT VID, AVG(rating) AS AverageRating FROM Rates " \
@@ -834,7 +936,116 @@ def get_top_five_new_released():
     result = curs.fetchall()
     conn.commit()
 
-    return result, 200
+    print("==============")
+    print(result)
+
+    top_twenty_data = []
+    for vid_pair in result:
+
+        try:
+            vid = int(vid_pair[0])
+        except:
+            continue
+
+        game_name_sql = f"SELECT title FROM video_game WHERE vid={vid};"
+        curs.execute(game_name_sql)
+        conn.commit()
+        try:
+            game_name = curs.fetchone()
+        except:
+            game_name = ''
+
+        game_desc_sql = f"SELECT description FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_desc_sql)
+        conn.commit()
+        try:
+            game_desc = curs.fetchone()
+        except:
+            game_desc = ''
+
+        game_image_sql = f"SELECT image FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_image_sql)
+        conn.commit()
+        try:
+            game_image = curs.fetchone()
+        except:
+            game_image = ''
+
+        user_avg_rating_sql = f"SELECT AVG(rating) FROM rates WHERE vid={vid_pair[0]};"  # Get average rating of game.
+        curs.execute(user_avg_rating_sql)
+        conn.commit()
+        try:
+            user_avg_rating = curs.fetchone()
+        except:
+            user_avg_rating = 0
+
+        developer_list_sql = f"SELECT sname FROM development INNER JOIN studio ON development.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(developer_list_sql)
+        conn.commit()
+        try:
+            developer_list_raw = curs.fetchall()
+        except:
+            developer_list_raw = []
+        developer_list = []
+        for tup in developer_list_raw:
+            developer_list.append(tup[0])
+
+        publisher_list_sql = f"SELECT sname FROM publishing INNER JOIN studio ON publishing.sid = studio.sid WHERE vid={vid_pair[0]};"
+        curs.execute(publisher_list_sql)
+        conn.commit()
+        try:
+            publisher_list_raw = curs.fetchall()
+        except:
+            publisher_list_raw = []
+        publisher_list = []
+        for tup in publisher_list_raw:
+            publisher_list.append(tup[0])
+        # Get esrb rating
+        game_esrb_rating_sql = f"SELECT esrb_rating FROM video_game WHERE vid={vid_pair[0]};"
+        curs.execute(game_esrb_rating_sql)
+        conn.commit()
+        try:
+            game_esrb_rating = curs.fetchone()
+        except:
+            game_esrb_rating = ''
+
+        # Get playtime
+        user_playtime_sql = f"SELECT starttime, endtime FROM gameplay WHERE vid={vid_pair[0]} AND uid={LOGGED_IN_USER_ID};"
+        curs.execute(user_playtime_sql)
+        conn.commit()
+        try:
+            user_playtime = curs.fetchall()
+        except:
+            user_playtime = 0
+
+        platform_and_price_list_sql = f"SELECT pname, price FROM platform INNER JOIN game_platform ON game_platform.pid = platform.pid WHERE vid={vid_pair[0]};"
+        curs.execute(platform_and_price_list_sql)
+        conn.commit()
+
+        try:
+            platform_and_price_list = curs.fetchall()
+        except:
+            platform_and_price_list = []
+
+        try:
+            data = {
+                "vid": vid_pair[0],
+                "user_rating": vid_pair[1],
+                "name": game_name[0],
+                "description": game_desc[0],
+                "banner": game_image[0],
+                "platforms": platform_and_price_list,
+                "developers": developer_list,
+                "publishers": publisher_list,
+                "gameplay": user_playtime,
+                "esrb_rating": game_esrb_rating[0],
+                "rating": int(user_avg_rating[0]),
+                "price": platform_and_price_list[0][1]
+            }
+        except:
+            data = {}
+        top_twenty_data.append(data)
+    return top_twenty_data, 200
 
 
 #
@@ -961,8 +1172,6 @@ def searchAndSortGames(uid, searchBy, data):
     except:
         return {}, 200
     for gameId in game_list:
-        print(str(gameId[0]))
-        print(type(str(gameId[0])))
         game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_name_sql)
         conn.commit()
