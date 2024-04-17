@@ -1,18 +1,40 @@
-import React, {useEffect} from 'react';
-import { useNavigate } from 'react-router-dom'
+import React, {useEffect, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../css/Home.css';
+import VideoGamePreview from "../components/VideoGamePreview";
 
 const Home = () => {
 
   const navigate = useNavigate();
 
+  const [data, setData] = useState({});
+
   useEffect(() => {
-    //grab all of the users collections and display the first one if there is one, if not then do not redirect
-    navigate("/collection/0");
+    fetch(`http://localhost:5050/api/videogame/1/topTenGamesByRating`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+          return res.json();
+      }).then(data => {
+
+          setData({
+            "top10": data
+          });
+          console.log("TOP 10")
+          console.log(data.top10)
+      })
   }, [])
 
   return (
-    <div id='collections-container'className='container'>
-      <h1>Make a collection to get started!</h1>
+    <div className='home'>
+      <div className="top10">
+        <h1>Top 10 Games by Rating: </h1>
+        <VideoGamePreview games={data.top10} deleteGame={null}/>
+      </div>
     </div>
   );
 }

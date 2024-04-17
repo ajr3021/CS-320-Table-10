@@ -1380,7 +1380,8 @@ def getUserTopTenGamesByRating(uid):
             "publishers": publisher_list,
             "gameplay": user_playtime,
             "esrb_rating": game_esrb_rating[0],
-            "rating": user_avg_rating[0]
+            "rating": int(user_avg_rating[0]),
+            "price": platform_and_price_list[0][1]
         }
         top_ten_data.append(top_ten_dict)
     return top_ten_data, 200
