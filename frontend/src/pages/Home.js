@@ -11,6 +11,7 @@ const Home = () => {
   const [data90, setData90] = useState({"top90": []})
   const [data20, setData20] = useState({"top20": []})
   const [data5, setData5] = useState({"top5": []})
+  const [dataGenre, setDataGenre] = useState({"genre": []})
 
   useEffect(() => {
     const localData = localStorage.getItem('homeTop10')
@@ -121,6 +122,38 @@ const Home = () => {
       })
     }
 
+    const localData5 = localStorage.getItem('homeRecGenre')
+    console.log(localData5)
+    if(localData5 && localData5 !== '[]' && localData5 !== '{}'){
+      const resultJson = JSON.parse(localData5);
+      setDataGenre({
+        "genre": resultJson
+      })
+    }else{
+      console.log("FETCHING")
+      fetch(`http://localhost:5050/api/videogame/recommended/genre`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+        console.log(res)
+          return res.json();
+      }).then(js => {
+        console.log("GENRE")
+        console.log(js)
+          setDataGenre({
+            "genre": js,
+          });
+
+          if(js.length !== 0){
+            localStorage.setItem('homeRecGenre', JSON.stringify(js))
+          }
+      })
+    }
+
   }, [])
 
   
@@ -142,6 +175,10 @@ const Home = () => {
       <div className="top5">
         <h1>Top 5 Games This Month: </h1>
         <VideoGamePreview games={data5.top5} deleteGame={null}/>
+      </div>
+      <div className="genre">
+        <h1>Top Game by Genre: </h1>
+        <VideoGamePreview games={dataGenre.genre} deleteGame={null}/>
       </div>
     </div>
   );

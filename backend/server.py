@@ -1172,6 +1172,10 @@ def searchAndSortGames(uid, searchBy, data):
     except:
         return {}, 200
     for gameId in game_list:
+        try:
+            vid = int(gameId[0])
+        except:
+            continue
         game_name_sql = f"SELECT title FROM video_game WHERE vid={gameId[0]};"
         curs.execute(game_name_sql)
         conn.commit()
@@ -1352,8 +1356,12 @@ def getUserTopGamesByGenre():
                      f"BY gname ORDER BY amount DESC LIMIT 1")
     curs.execute(sql_get_genre)
     conn.commit()
-    favorite_genre = curs.fetchone()
-    favorite_genre = favorite_genre[0]
+    try:
+        favorite_genre = curs.fetchone()
+        favorite_genre = favorite_genre[0]
+    except:
+        favorite_genre = ''
+    
     return searchAndSortGames(uid, "genre", favorite_genre)
 
 
