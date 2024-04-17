@@ -4,6 +4,7 @@ const Users = () => {
 
     const [users, setUsers] = useState([]);
     const [friends, setFriends] = useState([]);
+    const [followers, setFollowers] = useState(0);
 
     useEffect(() => {
         fetch(`http://localhost:5050/api/friends`, {
@@ -18,6 +19,23 @@ const Users = () => {
         }).then(data => {
             setFriends(data);
             console.log(data)
+        })
+    }, []);
+
+    useEffect(() => {
+        fetch(`http://localhost:5050/api/videogame/1/following`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+        }).then(res => {
+            return res.json();
+        }).then(data => {
+            console.log("FOLLOWERS")
+            console.log(data)
+            setFollowers(data.followed)
         })
     }, []);
 
@@ -36,17 +54,19 @@ const Users = () => {
     }
 
     const displayFriends = () => {
-        return(
-            friends.map((user) =>  {
-                return(
-                    <tr key={user.uid}>
-                        <td>{user.username}</td>
-                        <td>{user.email}</td>
-                        <td><button className='btn-primary' onClick={() => unfollow(user.uid)}>Unfollow</button></td>
-                    </tr>
-                )
-            })
-        )
+        if(friends && friends.length > 0){
+            return(
+                friends.map((user) =>  {
+                    return(
+                        <tr key={user.uid}>
+                            <td>{user.username}</td>
+                            <td>{user.email}</td>
+                            <td><button className='btn-primary' onClick={() => unfollow(user.uid)}>Unfollow</button></td>
+                        </tr>
+                    )
+                })
+            )
+        }
     }
 
     const noResults = () => {
@@ -139,7 +159,10 @@ const Users = () => {
                         {users.length === 0 ? noResults() : displayUsers()}
                     </tbody>
                 </table>
-                <h1>Following:</h1>
+                <div className='follow'>
+                    <h1>Following: {friends.length}</h1>
+                    <h1>Followers: {followers}</h1>
+                </div>
                 <table>
                     <thead className='head'>
                         <tr>

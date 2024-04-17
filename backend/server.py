@@ -745,12 +745,15 @@ def get_friends():
 
     final_result = []
 
-    for i in range(len(result)):
-        final_result.append({
-            "username": result[i][0],
-            "email": result[i][1],
-            "uid": result[i][2]
-        })
+    try:
+        for i in range(len(result)):
+            final_result.append({
+                "username": result[i][0],
+                "email": result[i][1],
+                "uid": result[i][2]
+            })
+    except:
+        return {}, 200
 
     return final_result
 
@@ -964,10 +967,19 @@ def getTotalFollowers(uid):  # Get all followers of a uid.
     sql_get_total_followers = "SELECT count(fid) FROM friends WHERE uid = %s"
     curs.execute(sql_get_total_followers, uid)
     conn.commit()
-    followers_num = curs.fetchone()  # Should just return a tuple
-    followers_dict = {
-        "followers": followers_num[0]
-    }
+    try:
+        followers_num = curs.fetchone()  # Should just return a tuple
+    except:
+        followers_num = None
+
+    if followers_num is None:
+        followers_dict = {
+            "followers": 0
+        }
+    else:
+        followers_dict = {
+            "followers": followers_num[0]
+        }
 
     return followers_dict, 200
 
@@ -980,10 +992,19 @@ def getTotalFollowed(uid):  # Get all people a person follows.
     sql_get_total_followed = "SELECT count(uid) FROM friends WHERE fid = %s"
     curs.execute(sql_get_total_followed, uid)
     conn.commit()
-    followed_num = curs.fetchone()  # Should just return a tuple
-    followed_dict = {
-        "followed": followed_num[0]
-    }
+    try:
+        followed_num = curs.fetchone()  # Should just return a tuple
+    except:
+        followed_num = None
+
+    if followed_num is None:
+        followed_dict = {
+            "followed": 0
+        }
+    else:
+        followed_dict = {
+            "followed": followed_num[0]
+        }
 
     return followed_dict, 200
 
