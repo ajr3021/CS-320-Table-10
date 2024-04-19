@@ -15,10 +15,9 @@ const CollectionPreview = ({selected}) => {
 
   useEffect(() => {
     const localData = localStorage.getItem('collectionPreviewData')
-    if(localData){
+    if(localData && localData !== '[]'){
       const resultJson = JSON.parse(localData);
       setData(resultJson)
-      console.log("GRABBING FROM LOCAL STORAGE")
     }else{
       fetch(`http://localhost:5050/api/collection/user`, {
             headers: {
@@ -139,7 +138,8 @@ const CollectionPreview = ({selected}) => {
                 <input type="text" name="" id="" onChange={(e) => nameChanged(e)} value={name} placeholder="Collection Name..."/>
                 <button className="btn-primary" onClick={(e) => createCollection(e)}>Create</button>
             </form>
-          </div>
+        </div>
+        <div className='count'><h1>Collection Count: {data.length}</h1></div>
         {data.length === 0 ? noColletions(): hasCollections()}
     </div>
   );

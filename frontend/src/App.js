@@ -22,7 +22,7 @@ function App() {
 
       </Route>
         <Route path='/' element={<Layout />}>
-          <Route element={<Home />}></Route>
+          <Route path= '/' element={<Home />}></Route>
           <Route path='/collection/:collectionId' element={<Collection />}></Route>
           <Route path='/videoGame/:videoGameId' element={<VideoGame />}></Route>
           <Route path='/users' element={<Users />}></Route>
