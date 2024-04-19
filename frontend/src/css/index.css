@@ -223,7 +223,11 @@ button {
 }
 
 #collections-container .collection-info{
-  width: 20vw;
+  width: 100%;
+}
+
+#collections-container h1 {
+  font-size: 1rem;
 }
 
 #collections-container .collection-btn button{

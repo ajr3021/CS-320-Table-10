@@ -12,10 +12,13 @@ const Home = () => {
   const [data20, setData20] = useState({"top20": []})
   const [data5, setData5] = useState({"top5": []})
   const [dataGenre, setDataGenre] = useState({"genre": []})
+  const [dataDev, setDataDev] = useState({"dev": []})
+  const [dataPlatform, setDataPlatform] = useState({"platform": []})
+  const [dataRating, setDataRating] = useState({"rating": []})
 
   useEffect(() => {
     const localData = localStorage.getItem('homeTop10')
-    if(localData && localData !== '[]'){
+    if(localData && localData !== '[]' && localData !== '{}'){
       const resultJson = JSON.parse(localData);
       setData({
         "top10": resultJson
@@ -42,7 +45,7 @@ const Home = () => {
     }
 
     const localData2 = localStorage.getItem('homeTop90')
-    if(localData2 && localData2 !== '[]'){
+    if(localData2 && localData2 !== '[]' && localData2 !== '{}'){
       const resultJson = JSON.parse(localData2);
       setData90({
         "top90": resultJson
@@ -69,7 +72,7 @@ const Home = () => {
     }
 
     const localData3 = localStorage.getItem('homeTop20')
-    if(localData3 && localData3 !== '[]'){
+    if(localData3 && localData3 !== '[]' && localData3 !== '{}'){
       const resultJson = JSON.parse(localData3);
       setData20({
         "top20": resultJson
@@ -96,7 +99,7 @@ const Home = () => {
     }
 
     const localData4 = localStorage.getItem('homeTop5')
-    if(localData4 && localData4 !== '[]'){
+    if(localData4 && localData4 !== '[]' && localData4 !== '{}'){
       const resultJson = JSON.parse(localData4);
       setData5({
         "top5": resultJson
@@ -123,14 +126,13 @@ const Home = () => {
     }
 
     const localData5 = localStorage.getItem('homeRecGenre')
-    console.log(localData5)
     if(localData5 && localData5 !== '[]' && localData5 !== '{}'){
       const resultJson = JSON.parse(localData5);
+      const result = resultJson.slice(0, 3);
       setDataGenre({
-        "genre": resultJson
+        "genre": result
       })
     }else{
-      console.log("FETCHING")
       fetch(`http://localhost:5050/api/videogame/recommended/genre`, {
           headers: {
               'Accept': 'application/json',
@@ -139,17 +141,106 @@ const Home = () => {
 
           method: 'GET',
       }).then(res => {
-        console.log(res)
           return res.json();
       }).then(js => {
-        console.log("GENRE")
-        console.log(js)
+          const result = js
+
           setDataGenre({
-            "genre": js,
+            "genre": result,
           });
 
           if(js.length !== 0){
-            localStorage.setItem('homeRecGenre', JSON.stringify(js))
+            localStorage.setItem('homeRecGenre', JSON.stringify(result))
+          }
+      })
+    }
+
+    const localData6 = localStorage.getItem('homeRecDev')
+    if(localData6 && localData6 !== '[]' && localData6 !== '{}'){
+      const resultJson = JSON.parse(localData6);
+      const result = resultJson.slice(0, 3);
+      setDataDev({
+        "dev": result
+      })
+    }else{
+      fetch(`http://localhost:5050/api/videogame/recommended/developer`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+          return res.json();
+      }).then(js => {
+          const result = js
+
+          setDataDev({
+            "dev": result,
+          });
+
+          if(js.length !== 0){
+            localStorage.setItem('homeRecDev', JSON.stringify(result))
+          }
+      })
+    }
+
+    const localData7 = localStorage.getItem('homeRecPlatform')
+    if(localData7 && localData7 !== '[]' && localData7 !== '{}'){
+      const resultJson = JSON.parse(localData7);
+      const result = resultJson.slice(0, 3);
+      setDataPlatform({
+        "platform": result
+      })
+    }else{
+      fetch(`http://localhost:5050/api/videogame/recommended/platform`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+          return res.json();
+      }).then(js => {
+          const result = js
+
+          setDataPlatform({
+            "platform": result,
+          });
+
+          if(js.length !== 0){
+            localStorage.setItem('homeRecPlatform', JSON.stringify(result))
+          }
+      })
+    }
+
+    const localData8 = localStorage.getItem('homeRecRating')
+    if(localData8 && localData8 !== '[]' && localData8 !== '{}'){
+      const resultJson = JSON.parse(localData8);
+      const result = resultJson.slice(0, 3);
+      setDataRating({
+        "rating": result
+      })
+    }else{
+      fetch(`http://localhost:5050/api/videogame/recommended/ratings`, {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+          },
+
+          method: 'GET',
+      }).then(res => {
+          return res.json();
+      }).then(js => {
+          const result = js
+
+          setDataRating({
+            "rating": result,
+          });
+
+          if(js.length !== 0){
+            localStorage.setItem('homeRecRating', JSON.stringify(result))
           }
       })
     }
@@ -177,8 +268,20 @@ const Home = () => {
         <VideoGamePreview games={data5.top5} deleteGame={null}/>
       </div>
       <div className="genre">
-        <h1>Top Game by Genre: </h1>
+        <h1>Recommended Games by Genre: </h1>
         <VideoGamePreview games={dataGenre.genre} deleteGame={null}/>
+      </div>
+      <div className="dev">
+        <h1>Recommended Games by Developer: </h1>
+        <VideoGamePreview games={dataDev.dev} deleteGame={null}/>
+      </div>
+      <div className="platform">
+        <h1>Recommended Games by Platform: </h1>
+        <VideoGamePreview games={dataPlatform.platform} deleteGame={null}/>
+      </div>
+      <div className="rating">
+        <h1>Recommended Games by Rating: </h1>
+        <VideoGamePreview games={dataRating.rating} deleteGame={null}/>
       </div>
     </div>
   );

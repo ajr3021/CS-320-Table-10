@@ -351,7 +351,7 @@ def rate_videogame(vid, data):
 @app.route("/api/collection/<cid>/<vid>", methods=['POST'])
 @cross_origin(origins="*")
 def insert_videogame_into_collection(cid, vid):
-    sql = f"INSERT INTO Collection_Has (CID,VID) VALUES ({cid},{vid});"
+    sql = f"INSERT INTO collection_has (CID,VID) VALUES ({cid},{vid});"
     sql2 = f"SELECT * FROM video_game WHERE VID = {vid};"
 
     curs.execute(sql)
@@ -629,13 +629,13 @@ def addPlaytime(uid, vid):
     sTime = str(data["starttime"])
     sTimeNumbers = sTime.split(':')
 
-    startTime = datetime.datetime.now()
+    startTime = datetime.now()
     startTime = startTime.replace(hour=int(sTimeNumbers[0]), minute=int(sTimeNumbers[1]))
 
     eTime = str(data["endtime"])
     eTimeNumbers = eTime.split(':')
 
-    endTime = datetime.datetime.now()
+    endTime = datetime.now()
     endTime = endTime.replace(hour=int(eTimeNumbers[0]), minute=int(eTimeNumbers[1]))
 
     sql = "INSERT INTO gameplay(uid, vid, starttime, endtime) VALUES (%s, %s, %s, %s);"
@@ -1374,8 +1374,11 @@ def getUserTopGamesByDeveloper():
                    f"amount DESC LIMIT 1;")
     curs.execute(sql_get_dev)
     conn.commit()
-    favorite_dev = curs.fetchone()
-    favorite_dev = favorite_dev[0]
+    try:
+        favorite_dev = curs.fetchone()
+        favorite_dev = favorite_dev[0]
+    except:
+        favorite_dev = ''
     return searchAndSortGames(uid, "developer", favorite_dev)
 
 
@@ -1386,8 +1389,11 @@ def getUserTopGamesByPlatform():
     sql_get_platform = (f"SELECT pname, count(pname) AS amount FROM gameplay LEFT JOIN game_platform on gameplay.vid = game_platform.VID LEFT JOIN platform ON platform.pid = game_platform.pid WHERE gameplay.uid = {uid} GROUP BY pname ORDER BY amount DESC LIMIT 1")
     curs.execute(sql_get_platform)
     conn.commit()
-    favorite_platform = curs.fetchone()
-    favorite_platform = favorite_platform[0]
+    try:
+        favorite_platform = curs.fetchone()
+        favorite_platform = favorite_platform[0]
+    except:
+        favorite_platform = ''
     return searchAndSortGames(uid, "platform", favorite_platform)
 
 
